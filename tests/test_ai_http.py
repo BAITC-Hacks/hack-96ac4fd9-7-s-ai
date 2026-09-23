@@ -6,11 +6,16 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from matcher import load_catalog, recommend
 from server import create_server
-from test_ai_agent import ScriptedTransport, agent_payload
+from test_ai_agent import ROOT, ScriptedTransport, agent_payload
 
 
 class AgentHTTPTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = load_catalog(ROOT / "data" / "catalog.csv")
+
     def setUp(self):
         self.transport = ScriptedTransport()
         self.server = create_server(host="127.0.0.1", port=0, agent_transport=self.transport)
@@ -52,12 +57,18 @@ class AgentHTTPTests(unittest.TestCase):
 
     def test_provider_failure_returns_200_with_explicit_fallback(self):
         self.transport.fail_at = 1
-        with self.post(agent_payload()) as response:
+        payload = agent_payload()
+        baseline = recommend(self.catalog, payload["query"])
+        with self.post(payload) as response:
             self.assertEqual(response.status, 200)
             result = json.load(response)
         self.assertEqual(result["agent"]["mode"], "fallback")
         self.assertTrue(result["agent"]["fallback_reason"])
         self.assertEqual(result["summary"]["eligible_count"], 4)
+        self.assertEqual(result["query"], baseline["query"])
+        self.assertEqual(result["cards"], baseline["cards"])
+        self.assertEqual(result["summary"], baseline["summary"])
+        self.assertEqual(result["agent"]["input_source"], "form")
         self.assertNotIn("do-not-expose-token", json.dumps(result))
 
 

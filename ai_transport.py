@@ -73,6 +73,18 @@ class OpenAITransport:
                 return result
         except HTTPError as error:
             code = "authentication" if error.code in (401, 403) else "rate_limit" if error.code == 429 else "provider_error"
+            if error.code == 429:
+                # Distinguish billing/quota from transient throttling without
+                # exposing provider messages, account identifiers or secrets.
+                try:
+                    detail = json.loads(error.read(65_536)).get("error", {})
+                    quota_codes = {"insufficient_quota", "credit_balance_exhausted",
+                                   "billing_hard_limit_reached", "organization_spend_limit_exceeded",
+                                   "project_spend_limit_exceeded", "organization_usage_limit_exceeded"}
+                    if detail.get("code") in quota_codes or detail.get("type") == "insufficient_quota":
+                        code = "quota_exceeded"
+                except (ValueError, TypeError, AttributeError, OSError):
+                    pass
             raise AIProviderError(code) from None
         except (TimeoutError, socket.timeout):
             raise AIProviderError("timeout") from None

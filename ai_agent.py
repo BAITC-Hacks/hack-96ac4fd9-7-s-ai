@@ -14,7 +14,7 @@ from matcher import _money, metadata, recommend
 
 _QUERY_KEYS = ('city', 'date', 'event_format', 'category', 'budget_kzt',
                'language', 'duration_hours', 'preferences', 'ui_language')
-_PROVIDER_CODES = {'not_configured', 'timeout', 'authentication', 'rate_limit',
+_PROVIDER_CODES = {'not_configured', 'timeout', 'authentication', 'rate_limit', 'quota_exceeded',
                    'provider_error', 'connection', 'invalid_response'}
 _DEADLINE_SECONDS = 9.0
 
@@ -50,11 +50,11 @@ def _safe_model(transport):
     return value if isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9_.:/-]{1,120}', value) else 'unknown'
 
 
-def _call(transport, request, deadline, request_ids, first=False):
+def _call(transport, request, deadline, request_ids):
     remaining = deadline - time.monotonic()
     if remaining <= 0.05:
         raise _AgentFailure('timeout')
-    timeout = min(4.0, remaining) if first else remaining
+    timeout = remaining
     try:
         response = transport(request, timeout)
     except Exception as error:
@@ -244,7 +244,7 @@ def run_agent(catalog, payload, transport):
         first = _call(transport, {'input': initial_input, 'tools': [tool],
                                  'tool_choice': {'type': 'function', 'name': 'search_contractors'},
                                  'parallel_tool_calls': False, 'max_output_tokens': 650},
-                      deadline, agent['request_ids'], first=True)
+                      deadline, agent['request_ids'])
         call, arguments, first_output = _tool_call(first, language)
         agent['trace'][0]['status'] = 'ok'
         current_step = 1

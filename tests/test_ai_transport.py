@@ -43,6 +43,34 @@ class TransportTests(unittest.TestCase):
                 OpenAITransport()({}, 2)
         request.assert_not_called()
 
+    def test_quota_errors_are_distinct_and_redacted(self):
+        for code in ("insufficient_quota", "credit_balance_exhausted"):
+            with self.subTest(code=code):
+                body = json.dumps({"error": {"code": code,
+                    "message": "sensitive provider text: fake-body-secret"}}).encode()
+                error = HTTPError("https://api.openai.com/v1/responses", 429,
+                                  "fake-status-secret", {}, io.BytesIO(body))
+                with patch("ai_transport.urlopen", side_effect=error):
+                    with self.assertRaises(AIProviderError) as caught:
+                        OpenAITransport("fake-key-secret")({}, 2)
+                self.assertEqual(str(caught.exception), "quota_exceeded")
+                for secret in ("fake-body-secret", "fake-status-secret", "fake-key-secret"):
+                    self.assertNotIn(secret, str(caught.exception))
+                    self.assertNotIn(secret, repr(caught.exception))
+
+    def test_temporary_rate_limit_is_distinct_and_redacted(self):
+        body = json.dumps({"error": {"code": "rate_limit_exceeded",
+            "message": "sensitive provider text: fake-body-secret"}}).encode()
+        error = HTTPError("https://api.openai.com/v1/responses", 429,
+                          "fake-status-secret", {}, io.BytesIO(body))
+        with patch("ai_transport.urlopen", side_effect=error):
+            with self.assertRaises(AIProviderError) as caught:
+                OpenAITransport("fake-key-secret")({}, 2)
+        self.assertEqual(str(caught.exception), "rate_limit")
+        for secret in ("fake-body-secret", "fake-status-secret", "fake-key-secret"):
+            self.assertNotIn(secret, str(caught.exception))
+            self.assertNotIn(secret, repr(caught.exception))
+
     def test_dotenv_is_literal_and_environment_has_priority(self):
         with tempfile.TemporaryDirectory() as directory:
             Path(directory, ".env").write_text(
