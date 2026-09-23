@@ -1,8 +1,11 @@
 node_modules/
 dist/
 .env
-.env.local
+.env.*
+!.env.example
 **/.status/
 backend/data/
 backend/public/generated/
 *.log
+.DS_Store
+Thumbs.db
