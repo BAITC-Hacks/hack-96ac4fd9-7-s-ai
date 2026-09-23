@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ec">
+  <meta name="description" content="Firebird — іс-шара идеялары, жоспар және каталог деректеріне сүйенген мердігер таңдауы.">
+  <title>Firebird — Идеядан есте қалар сәтке</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23d7754d'/%3E%3Cpath d='m11 29 6-19 13 7-10 1 6 11-10-6z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/home.css">
+  <script src="/shared.js" defer></script>
+  <script src="/home.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skip">Негізгі бөлімге өту</a>
+  <header class="home-header">
+    <a class="brand" href="/" aria-label="Firebird"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m10 29 7-20 14 8-12 1 8 13-12-7-5 5Z"/><path d="m21 9 9-3-3 9-6-6Z" opacity=".5"/></svg><span>firebird<span class="brand-dot">.</span></span></a>
+    <nav class="main-nav" aria-label="Навигация">
+      <a href="/" aria-current="page" data-i18n="navHome">Басты бет</a>
+      <a href="/match" data-i18n="navMatch">Іріктеу</a>
+      <a href="/planner" data-i18n="navPlanner">Жоспар</a>
+      <a href="/catalog" data-i18n="navCatalog">Каталог</a>
+      <a href="/saved"><span data-i18n="navSaved">Таңдаулылар</span><span class="nav-badge" id="saved-count" hidden></span></a>
+      <a href="/compare"><span data-i18n="navCompare">Салыстыру</span><span class="nav-badge" id="compare-count" hidden></span></a>
+      <a href="/history" data-i18n="navHistory">Тарих</a>
+    </nav>
+    <div class="language-switch" aria-label="Тіл / Язык"><button type="button" data-lang="kk" aria-pressed="true">ҚАЗ</button><button type="button" data-lang="ru" aria-pressed="false">РУС</button></div>
+  </header>
+
+  <main id="main">
+    <section class="hero section-shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="tiny-sun" aria-hidden="true">✳</span><span data-i18n="eyebrow">КЕЗ КЕЛГЕН ҮЛКЕН СӘТ ИДЕЯДАН БАСТАЛАДЫ</span></p>
+        <h1 id="hero-title"><span data-i18n="heroLine1">Идеяңызға</span><br><em data-i18n="heroLine2">жан бітіріңіз.</em></h1>
+        <p class="hero-description" data-i18n="heroText">Жылы отбасылық кеш пе, ерекше корпоратив пе? Идея таңдаңыз, жоспарыңызды құрыңыз, сай келетін мердігерлерді дәлелмен салыстырыңыз.</p>
+        <div class="hero-actions"><a class="button primary" href="/planner"><span data-i18n="startPlan">Іс-шарамды жоспарлау</span><span aria-hidden="true">↗</span></a><a class="button secondary" href="/match"><span data-i18n="findVendor">Мердігер таңдау</span><span aria-hidden="true">→</span></a></div>
+        <p class="hero-footnote"><span aria-hidden="true">✓</span><span data-i18n="heroNote">Әр ұсыныстың себебі бар. Әр шешім өз қолыңызда.</span></p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-top-label"><span class="status-dot"></span><span data-i18n="artLabel">СІЗДІҢ КЕЛЕСІ ЕРЕКШЕ КҮНІҢІЗ</span></div>
+        <svg class="event-scene" viewBox="0 0 500 390" fill="none">
+          <path d="M45 308H460" stroke="#bec5ac" stroke-width="2"/>
+          <path d="M101 303V147C101 68 162 26 230 26C298 26 359 68 359 147V303" fill="#d57a50"/>
+          <path d="M126 303V152C126 87 170 52 230 52C290 52 334 87 334 152V303" fill="#ecc89f"/>
+          <circle cx="230" cy="149" r="67" fill="#f8ead0"/>
+          <path d="M176 168c20-39 46-48 62-32 14 14 19 20 44 5" stroke="#c66e4d" stroke-width="3" stroke-linecap="round"/>
+          <path d="m224 111 7 16 17 6-17 7-7 17-6-17-17-7 17-6 6-16Z" fill="#c66e4d"/>
+          <ellipse cx="258" cy="288" rx="155" ry="23" fill="#d5d8be"/>
+          <path d="M162 265v64m189-64v64" stroke="#6f7d5a" stroke-width="8" stroke-linecap="round"/>
+          <ellipse cx="258" cy="260" rx="119" ry="24" fill="#f9f7ed" stroke="#7b8767" stroke-width="2"/>
+          <ellipse cx="258" cy="256" rx="91" ry="13" fill="#e6e9d6"/>
+          <ellipse cx="184" cy="258" rx="18" ry="5" fill="#fff" stroke="#b8c0a4"/>
+          <ellipse cx="326" cy="258" rx="18" ry="5" fill="#fff" stroke="#b8c0a4"/>
+          <path d="M247 254l-4-28h27l-4 28" fill="#b17d61"/>
+          <path d="M256 229v-53m0 42-24-17m24 1 25-20" stroke="#6c7b56" stroke-width="2"/>
+          <ellipse cx="231" cy="200" rx="12" ry="6" transform="rotate(26 231 200)" fill="#99a47f"/>
+          <ellipse cx="280" cy="182" rx="13" ry="6" transform="rotate(-32 280 182)" fill="#8e9c73"/>
+          <circle cx="257" cy="177" r="11" fill="#e5a27a"/><circle cx="257" cy="177" r="4" fill="#faf0d9"/>
+          <path d="M70 286v-34m0 20-13-13m13 5 15-13" stroke="#899871" stroke-width="3"/>
+          <path d="M57 286h28l-5 23H62l-5-23Z" fill="#d7c5a3"/>
+          <path d="m395 84 5 12 13 5-13 5-5 13-5-13-12-5 12-5 5-12Z" fill="#9da783"/>
+          <circle cx="78" cy="109" r="4" fill="#d48b60"/><circle cx="427" cy="204" r="5" fill="#d48b60"/>
+          <path d="m358 43 8-10m50 92 13 1M69 179l-11-4" stroke="#a1ad89" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="art-note note-one"><span class="note-symbol">✦</span><div><strong data-i18n="artIdea">Бір жақсы идея</strong><span data-i18n="artIdeaSub">мың есте қалар сәт</span></div></div>
+        <div class="art-note note-two"><span class="mini-calendar">09<span>10</span></span><div><strong data-i18n="artCalendar">Күнді салыстырыңыз</strong><span data-i18n="artCalendarSub">таңдау күнге байланысты</span></div></div>
+        <div class="art-bottom-label"><span>01</span><span data-i18n="artStep1">ИДЕЯ</span><i></i><span>02</span><span data-i18n="artStep2">ЖОСПАР</span><i></i><span>03</span><span data-i18n="artStep3">ТАҢДАУ</span></div>
+      </div>
+    </section>
+
+    <section class="catalog-facts section-shell" aria-label="Каталог деректері">
+      <div><strong id="stat-profiles">66</strong><span data-i18n="statProfiles">каталог профилі</span></div>
+      <div><strong id="stat-categories">17</strong><span data-i18n="statCategories">қызмет санаты</span></div>
+      <div><strong id="stat-days">100</strong><span data-i18n="statDays">күндік күнтізбе</span></div>
+      <p><span class="status-dot"></span><span data-i18n="dataWindow">Каталог күндері: 23.09–31.12.2026. Бастапқы дерекке сүйенген таңдау.</span></p>
+    </section>
+
+    <section class="section-shell section-gap" aria-labelledby="formats-title">
+      <div class="section-heading"><div><p class="eyebrow" data-i18n="formatEyebrow">АЛДЫМЕН КӨҢІЛ КҮЙІН ТАҢДАЙЫҚ</p><h2 id="formats-title" data-i18n="formatTitle">Қандай сәтті жоспарлап жүрсіз?</h2></div><span class="section-aside" data-i18n="formatAside">Сізден — идея. Бізден — бастау нүктесі.</span></div>
+      <div id="format-grid" class="format-grid"></div>
+    </section>
+
+    <section class="ideas-section section-gap" id="ideas" aria-labelledby="ideas-title">
+      <div class="section-shell">
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="ideasEyebrow">ДАЙЫН ИДЕЯЛАР, ӨЗІҢІЗГЕ САЙ ӨЗГЕРТІҢІЗ</p><h2 id="ideas-title" data-i18n="ideasTitle">«Қалай жасасақ екен?»<br>деген жерден бастайық.</h2></div><p class="section-description" data-i18n="ideasText">Бір тақырып, бірнеше үйлесетін қызмет. Үлгіні ашып, қала, күн мен бюджетті өзіңізге бейімдеңіз.</p></div>
+        <div id="idea-grid" class="idea-grid"></div>
+        <p class="template-note" data-i18n="templateNote">Күн мен бюджет — өзгертуге арналған мысалдар. Бюджет сомасы баға болжамы емес; мердігердің «бастап» бағасы бөлек көрсетіледі.</p>
+      </div>
+    </section>
+
+    <section class="section-shell section-gap" aria-labelledby="categories-title">
+      <div class="section-heading"><div><p class="eyebrow" data-i18n="categoriesEyebrow">КЕРЕК АДАМДЫ ТАБУ ОҢАЙЫРАҚ</p><h2 id="categories-title" data-i18n="categoriesTitle">Әр бөлшектің өз маманы бар.</h2></div><a class="text-link" href="/catalog"><span data-i18n="allCatalog">Толық каталог</span><span aria-hidden="true">↗</span></a></div>
+      <div id="category-grid" class="category-grid" aria-live="polite"><p class="loading-message" data-i18n="loading">Каталог санаттары жүктелуде…</p></div>
+    </section>
+
+    <section class="section-shell section-gap" aria-labelledby="tools-title">
+      <div class="section-heading"><div><p class="eyebrow" data-i18n="toolsEyebrow">ЖОСПАРДЫ БІР ЖЕРДЕ ҰСТАҢЫЗ</p><h2 id="tools-title" data-i18n="toolsTitle">Ұсақ-түйекті де ұмытпайық.</h2></div></div>
+      <div class="tools-grid">
+        <a class="tool-card tool-featured" href="/planner"><span class="tool-icon" aria-hidden="true">▤</span><span class="tool-kicker" data-i18n="plannerKicker">ІС-ШАРА ҚҰРАСТЫРҒЫШЫ</span><h3 data-i18n="plannerTitle">Жеке мамандардан<br>біртұтас командаға.</h3><p data-i18n="plannerText">Бірнеше санатты таңдаңыз, жалпы бюджетті бөліп, жоспарыңызға сәйкес мердігерлерді қараңыз.</p><span class="tool-action"><span data-i18n="openPlanner">Жоспар құру</span><span aria-hidden="true">↗</span></span></a>
+        <a class="tool-card" href="/planner#date-radar"><span class="tool-icon" aria-hidden="true">◷</span><h3 data-i18n="radarTitle">Күнді өзгертіп көріңіз</h3><p data-i18n="radarText">Бір күнде сәйкес келмесе, жақын күндердегі таңдауды салыстырыңыз.</p><span class="tool-action"><span data-i18n="openRadar">Күн радары</span><span aria-hidden="true">↗</span></span></a>
+        <a class="tool-card" href="/compare"><span class="tool-icon" aria-hidden="true">⇄</span><h3 data-i18n="compareTitle">Үшеуін қатар қойыңыз</h3><p data-i18n="compareText">Баға, тіл, формат және таңдалған күндегі бос уақытын бір кестеден көріңіз.</p><span class="tool-action"><span data-i18n="openCompare">Салыстыруды ашу</span><span aria-hidden="true">↗</span></span></a>
+        <a class="tool-card" href="/saved"><span class="tool-icon" aria-hidden="true">♡</span><h3 data-i18n="savedTitle">Ұнағанын жоғалтпаңыз</h3><p data-i18n="savedText">Таңдаулылар осы браузерде сақталады. Кейін оралып, шешімді асықпай қабылдаңыз.</p><span class="tool-action"><span data-i18n="openSaved">Таңдаулылар</span><span aria-hidden="true">↗</span></span></a>
+      </div>
+    </section>
+
+    <section class="how-section section-gap" aria-labelledby="how-title"><div class="section-shell how-layout"><div><p class="eyebrow" data-i18n="howEyebrow">ҚАРАПАЙЫМ ҮШ ҚАДАМ</p><h2 id="how-title" data-i18n="howTitle">Тізімнен<br>сенімді шешімге.</h2><p class="how-intro" data-i18n="howText">Неге дәл осы мердігер? Жауап әр карточкада бар.</p><a class="text-link" href="/match"><span data-i18n="tryNow">Қазір байқап көру</span><span aria-hidden="true">↗</span></a></div><ol class="steps"><li><span>01</span><div><h3 data-i18n="step1Title">Қалауыңызды айтыңыз</h3><p data-i18n="step1Text">Қала, күн, формат және бюджет. Қажет болса, тіл мен ерекше тілекті қосыңыз.</p></div></li><li><span>02</span><div><h3 data-i18n="step2Title">Нақты себепті көріңіз</h3><p data-i18n="step2Text">Үшке дейін нұсқа. Әрқайсысының ерекшелігі және оны растайтын бастапқы сипаттама.</p></div></li><li><span>03</span><div><h3 data-i18n="step3Title">Өз таңдауыңызды жасаңыз</h3><p data-i18n="step3Text">Профильді ашыңыз, күнтізбесін тексеріңіз, сақтаңыз немесе салыстырыңыз.</p></div></li></ol></div></section>
+
+    <section class="section-shell final-cta"><div><span class="tiny-sun" aria-hidden="true">✳</span><h2 data-i18n="finalTitle">Келесі керемет сәт — сіздікі.</h2><p data-i18n="finalText">Алғашқы қадам үшін толық жоспардың болуы міндетті емес.</p></div><a class="button primary" href="/planner"><span data-i18n="startPlan">Іс-шарамды жоспарлау</span><span aria-hidden="true">↗</span></a></section>
+  </main>
+
+  <footer class="home-footer section-shell"><div><a class="footer-brand" href="/">firebird.</a><p data-i18n="footerTagline">Идеядан нақты таңдауға.</p></div><div class="footer-links"><a href="/catalog" data-i18n="navCatalog">Каталог</a><a href="/match" data-i18n="navMatch">Іріктеу</a><a href="/history" data-i18n="navHistory">Тарих</a><a href="#ideas" data-i18n="footerIdeas">Идеялар</a></div><p class="footer-note" data-i18n="footerNote">Анонимдендірілген каталог. Ұсыныс пен жоспарлау сервисі. Соңғы баға мен қолжетімділікті нақтылау қажет.</p></footer>
+  <div id="home-notice" class="home-notice" role="status" hidden></div>
+  <noscript><p class="noscript-note">Интерактивті үлгілер үшін JavaScript қосыңыз. / Для интерактивных шаблонов включите JavaScript. <a href="/match">Іріктеу / Подбор</a></p></noscript>
+</body>
+</html>

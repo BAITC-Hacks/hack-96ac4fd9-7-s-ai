@@ -31,8 +31,8 @@ class ServerTests(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join(timeout=3)
 
-    def post(self, body):
-        request = Request(self.base_url + "/api/recommend", data=body,
+    def post(self, body, path="/api/recommend"):
+        request = Request(self.base_url + path, data=body,
                           headers={"Content-Type": "application/json"}, method="POST")
         return urlopen(request, timeout=10)
 
@@ -91,7 +91,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 404)
 
     def test_product_pages_and_catalog_api_are_served(self):
-        for path in ("/catalog", "/contractor/HK-39372", "/saved", "/compare", "/history"):
+        for path in ("/", "/match", "/planner", "/catalog", "/contractor/HK-39372", "/saved", "/compare", "/history"):
             with self.subTest(path=path), urlopen(self.base_url + path, timeout=3) as response:
                 self.assertEqual(response.status, 200)
                 self.assertIn("text/html", response.headers.get("Content-Type", ""))
@@ -126,6 +126,58 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as caught:
             urlopen(self.base_url + "/api/compare?" + duplicates, timeout=3)
         self.assertEqual(caught.exception.code, 400)
+
+    def test_plan_api_returns_distinct_members_total_budget_and_source_provenance(self):
+        payload = dict(VALID_QUERY, categories=["Ведущий", "Флорист"], budget_kzt=1_300_000,
+                       language="", duration_hours=None)
+        payload.pop("category")
+        with self.post(json.dumps(payload, ensure_ascii=False).encode("utf-8"), "/api/plan") as response:
+            self.assertEqual(response.status, 200)
+            result = json.load(response)
+        self.assertEqual(result["outcome"], "bundles")
+        self.assertLessEqual(len(result["bundles"]), 3)
+        with urlopen(self.base_url + "/api/contractors/HK-39372", timeout=3) as response:
+            source_florist = json.load(response)
+        for bundle in result["bundles"]:
+            items = bundle["items"]
+            self.assertEqual([item["category"] for item in items], payload["categories"])
+            self.assertEqual(len({item["id"] for item in items}), len(items))
+            self.assertEqual(bundle["total_price_from_kzt"], sum(item["price_from_kzt"] for item in items))
+            self.assertLessEqual(bundle["total_price_from_kzt"], payload["budget_kzt"])
+            self.assertEqual(bundle["budget_remaining_kzt"], payload["budget_kzt"] - bundle["total_price_from_kzt"])
+            florist = next(item for item in items if item["category"] == "Флорист")
+            self.assertEqual(florist["id"], "HK-39372")
+            self.assertIs(florist["price_imputed"], True)
+            self.assertEqual(florist["evidence"][0]["text"], source_florist["description"])
+
+    def test_plan_api_rejects_duplicate_categories_with_client_error(self):
+        payload = dict(VALID_QUERY, categories=["Ведущий", "Ведущий"])
+        payload.pop("category")
+        with self.assertRaises(HTTPError) as caught:
+            self.post(json.dumps(payload, ensure_ascii=False).encode("utf-8"), "/api/plan")
+        self.assertEqual(caught.exception.code, 400)
+        error = json.loads(caught.exception.read())
+        self.assertTrue(error["error"])
+
+    def test_plan_api_explains_total_budget_shortfall_and_returns_verified_date_radar(self):
+        payload = dict(VALID_QUERY, categories=["Ведущий", "Флорист"], budget_kzt=699_999,
+                       language="", duration_hours=None)
+        payload.pop("category")
+        with self.post(json.dumps(payload, ensure_ascii=False).encode("utf-8"), "/api/plan") as response:
+            self.assertEqual(response.status, 200)
+            result = json.load(response)
+        self.assertEqual(result["outcome"], "no_complete_bundle")
+        self.assertEqual(result["bundles"], [])
+        self.assertEqual(result["summary"]["covered_categories"], 2)
+        self.assertEqual(result["summary"]["minimum_feasible_total_kzt"], 700_000)
+        self.assertIn("1 ₸", result["summary"]["message"])
+        self.assertIn("бастап", result["pricing_note"])
+        self.assertEqual(len(result["date_radar"]), 14)
+        first = result["date_radar"][0]
+        self.assertEqual(first["date"], "2026-10-10")
+        self.assertTrue(first["complete_bundle_possible"])
+        self.assertEqual(first["min_total_price_from_kzt"], 700_000)
+        self.assertFalse(first["within_budget"])
 
 
 if __name__ == "__main__":

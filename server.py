@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from matcher import load_catalog, metadata, recommend
 from catalog_service import browse_catalog, contractor_detail, compare_contractors
+from planner import plan_event
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 32_768
@@ -75,7 +76,9 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
     public = (Path(static_dir) if static_dir else ROOT / "static").resolve()
     catalog = load_catalog(source)
     catalog_version = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
-    info = dict(metadata(catalog), demos=demo_queries(), catalog_version=catalog_version)
+    info = dict(metadata(catalog), demos=demo_queries(), catalog_version=catalog_version,
+                category_counts={category: sum(category in row['categories'] for row in catalog)
+                                 for category in metadata(catalog)['categories']})
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Firebird/1.0"
@@ -119,7 +122,8 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
             if path in ("/catalog", "/compare", "/saved", "/history") or path.startswith("/contractor/"):
                 relative = "portal.html"
             else:
-                relative = "index.html" if path in ("", "/") else path.lstrip("/")
+                relative = {"": "home.html", "/": "home.html", "/match": "index.html",
+                            "/planner": "planner.html"}.get(path, path.lstrip("/"))
             file = (public / relative).resolve()
             if not file.is_relative_to(public) or not file.is_file():
                 return self.send_json(404, {"error": "Not found"})
@@ -144,7 +148,8 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
             self.do_GET()
 
         def do_POST(self):
-            if urlsplit(self.path).path != "/api/recommend":
+            api_path = urlsplit(self.path).path
+            if api_path not in ("/api/recommend", "/api/plan"):
                 return self.send_json(404, {"error": "Not found"})
             started = time.perf_counter()
             try:
@@ -158,8 +163,11 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
                 if not isinstance(request, dict):
                     raise ValueError("Сұраныс JSON объектісі болуы керек.")
                 previous_query = request.pop("previous_query", None)
-                result = recommend(catalog, request)
-                result["date_change"] = date_comparison(catalog, result, previous_query)
+                if api_path == "/api/plan":
+                    result = plan_event(catalog, request)
+                else:
+                    result = recommend(catalog, request)
+                    result["date_change"] = date_comparison(catalog, result, previous_query)
                 result["catalog_version"] = catalog_version
                 result["elapsed_ms"] = round((time.perf_counter() - started) * 1000, 2)
                 self.send_json(200, result)

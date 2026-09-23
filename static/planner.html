@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f5f3ee">
+  <meta name="description" content="Firebird — ортақ бюджетпен іс-шара командасын жинау және жоспарын сақтау.">
+  <title>Firebird — Іс-шара жоспары</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23ee5937'/%3E%3Cpath d='m11 29 6-19 13 7-10 1 6 11-10-6z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/shared.css"><link rel="stylesheet" href="/portal.css"><link rel="stylesheet" href="/planner.css">
+  <script src="/shared.js" defer></script><script src="/planner.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#planner-form" data-i18n="skip">Жоспарға өту</a>
+  <header class="site-header portal-header">
+    <a class="brand" href="/" aria-label="Firebird"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="m10 29 7-20 14 8-12 1 8 13-12-7-5 5Z" fill="currentColor"/><path d="m21 9 9-3-3 9-6-6Z" fill="currentColor" opacity=".55"/></svg></span><span>firebird<span class="brand-dot">.</span></span></a>
+    <nav class="firebird-nav" aria-label="Басты навигация">
+      <a class="nav-link" href="/" data-i18n="home">Басты бет</a><a class="nav-link" href="/match" data-i18n="match">Іріктеу</a><a class="nav-link active" aria-current="page" href="/planner" data-i18n="planner">Жоспар</a><a class="nav-link" href="/catalog" data-i18n="catalog">Каталог</a><a class="nav-link" href="/saved"><span data-i18n="saved">Таңдаулылар</span><span class="nav-count" data-store-count="favorites">0</span></a><a class="nav-link" href="/compare"><span data-i18n="compare">Салыстыру</span><span class="nav-count" data-store-count="compare">0</span></a><a class="nav-link" href="/history" data-i18n="history">Тарих</a>
+    </nav>
+    <div class="header-actions"><div class="language-switch" aria-label="Тіл / Язык"><button type="button" data-language="kk">ҚАЗ</button><button type="button" data-language="ru">РУС</button></div></div>
+  </header>
+  <main class="planner-shell">
+    <section class="planner-intro"><div><div class="eyebrow" data-i18n="eyebrow">✳ БӘРІ БІР ЖОСПАРДА</div><h1 data-i18n="title">Бір іс-шара. Бір дайын команда.</h1><p data-i18n="subtitle">Ортақ бюджетке команда жинаңыз, қолайлы күнді табыңыз және келесі қадамдарды жоспарлаңыз.</p></div><div class="planner-project-status"><span class="status-dot"></span><span id="project-status" data-i18n="localNote">Жоба осы браузерде сақталады</span></div></section>
+    <div class="planner-layout">
+      <aside class="planner-sidebar">
+        <section class="planner-form-panel"><div class="planner-section-heading"><span class="section-index">01 /</span><h2 data-i18n="eventConditions">Іс-шара шарттары</h2></div>
+          <button type="button" id="plan-demo" class="planner-demo-button" data-i18n="demo" disabled>Дайын мысал: корпоративке 4 қызмет ↗</button>
+          <form id="planner-form">
+            <div class="field"><label for="project-name" data-i18n="projectName">Жоба атауы</label><input id="project-name" type="text" maxlength="100" data-placeholder="projectPlaceholder" placeholder="Менің іс-шарам"></div>
+            <div class="field-row"><div class="field"><label for="plan-city" data-i18n="city">Қала</label><div class="select-wrap"><select id="plan-city" required disabled></select></div></div><div class="field"><label for="plan-date" data-i18n="date">Күні</label><input id="plan-date" type="date" value="2026-10-09" min="2026-09-23" max="2026-12-31" required></div></div>
+            <div class="field"><label for="plan-format" data-i18n="format">Іс-шара форматы</label><div class="select-wrap"><select id="plan-format" required disabled></select></div></div>
+            <div class="field"><label for="plan-budget" data-i18n="totalBudget">Команданың ортақ бюджеті</label><div class="input-suffix"><input id="plan-budget" type="number" min="1" max="1000000000" step="1" value="1300000" inputmode="numeric" required><span>₸</span></div><span id="plan-budget-label" class="field-hint">1 300 000 ₸</span></div>
+            <div class="field"><div class="category-label-row"><label for="plan-category-picker" data-i18n="services">Қажетті қызметтер</label><span id="plan-category-count">2 / 4</span></div><div id="plan-category-chips" class="plan-category-chips"></div><div class="select-wrap"><select id="plan-category-picker" disabled><option value="" data-i18n="addService">+ Қызмет қосу</option></select></div><span class="field-hint" data-i18n="serviceHint">1–4 санат. Әр қызметке жеке мердігер.</span></div>
+            <details class="extra-options planner-extras"><summary><span data-i18n="extra">Қосымша шарттар</span><span class="optional-label" id="plan-extra-summary" data-i18n="optional">міндетті емес</span></summary><div class="extra-fields"><div class="field-row"><div class="field"><label for="plan-language" data-i18n="language">Тілі</label><div class="select-wrap"><select id="plan-language" disabled></select></div></div><div class="field"><label for="plan-duration" data-i18n="duration">Ұзақтығы, сағат</label><input id="plan-duration" type="number" min="0.5" max="48" step="0.5" placeholder="4"></div></div><div class="field"><label for="plan-preferences" data-i18n="preferences">Ерекше тілектер</label><textarea id="plan-preferences" rows="2" maxlength="500" data-placeholder="preferencesPlaceholder" placeholder="Командалық ойындар, жайлы атмосфера…"></textarea></div></div></details>
+            <div class="form-notice" id="plan-dirty" hidden data-i18n="conditionsChanged">Шарттар өзгерді. Команданы қайта жинаңыз.</div>
+            <button class="submit-button" id="plan-submit" type="submit" disabled><span id="plan-submit-text" data-i18n="buildTeam">Команда жинау</span><span aria-hidden="true">↗</span></button>
+            <p class="planner-form-note" data-i18n="matchingNote">Күн, қала және формат тексеріледі. Бағалар ортақ бюджетпен салыстырылады.</p>
+            <div id="plan-form-error" class="error-banner" role="alert" hidden></div>
+          </form>
+        </section>
+        <section class="checklist-panel"><div class="planner-section-heading"><span class="section-index">✓ /</span><h2 data-i18n="checklist">Келесі қадамдар</h2><span id="checklist-count" class="checklist-count">0 / 5</span></div><div class="checklist-progress"><span id="checklist-progress-bar"></span></div><div id="checklist-items"></div><form id="checklist-add-form" class="checklist-add"><label class="sr-only" for="checklist-new" data-i18n="newTask">Жаңа міндет</label><input id="checklist-new" type="text" maxlength="160" data-placeholder="newTask" placeholder="Жаңа міндет"><button type="submit" id="checklist-add-button" aria-label="Қосу">+</button></form><p class="checklist-note" data-i18n="checklistNote">Мәтінді өзгертуге болады. Белгілер осы браузерде сақталады.</p></section>
+      </aside>
+      <div class="planner-results-column">
+        <section aria-labelledby="team-heading"><div class="planner-results-heading"><div class="planner-section-heading"><span class="section-index">02 /</span><h2 id="team-heading" data-i18n="teamOptions">Іс-шара командасы</h2></div><span id="plan-team-count" class="planner-small-label"></span></div><div id="plan-results"><div class="portal-loading"><span class="portal-spinner"></span><span data-i18n="loading">Командалар жиналып жатыр…</span></div></div></section>
+        <section id="date-radar" class="date-radar-section" aria-labelledby="radar-heading"><div class="planner-results-heading"><div class="planner-section-heading"><span class="section-index">03 /</span><h2 id="radar-heading" data-i18n="dateRadar">Күндер радары</h2></div><span class="planner-small-label" data-i18n="nextDays">Алдағы 14 күн</span></div><p class="section-explainer" data-i18n="radarHint">Басқа күнге ауыстырсаңыз, толық команда мен бастапқы баға қалай өзгеретінін көріңіз.</p><div id="plan-radar" class="radar-grid"></div></section>
+        <section id="plan-export" class="plan-export-section"><div><h2 data-i18n="yourPlan">Дайын жоспар — өзіңізбен бірге.</h2><p data-i18n="exportHint">Таңдалған команданы, шығындарды және міндеттерді сақтап алыңыз.</p><span class="export-local-note" data-i18n="localOnly">Сақтау тек осы браузерде орындалады.</span></div><div class="plan-export-actions"><button type="button" class="portal-button" id="save-project" data-i18n="saveProject">Жобаны сақтау</button><div class="download-row"><button type="button" class="export-button" id="export-txt" disabled>TXT ↓</button><button type="button" class="export-button" id="export-json" disabled>JSON ↓</button><button type="button" class="export-button" id="print-plan" data-i18n="print" disabled>Басып шығару</button></div></div></section>
+      </div>
+    </div>
+    <section class="print-only" id="print-content"></section>
+  </main>
+  <footer class="portal-footer"><span><a href="/" class="footer-brand">firebird.</a><span data-i18n="footer">Іс-шараңызға дәл келетін адамдар</span></span><span data-i18n="pricingNote">Бастапқы бағалар. Соңғы құн мен күнді мердігерлермен нақтылаңыз.</span></footer>
+  <div id="planner-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

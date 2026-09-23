@@ -1,6 +1,6 @@
 FROM python:3.13-slim
 WORKDIR /app
-COPY server.py matcher.py evidence.py catalog_service.py ./
+COPY server.py matcher.py evidence.py catalog_service.py planner.py ./
 COPY data ./data
 COPY static ./static
 ENV PYTHONUNBUFFERED=1

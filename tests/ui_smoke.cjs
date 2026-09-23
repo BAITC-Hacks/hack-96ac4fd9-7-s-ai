@@ -42,7 +42,7 @@ async function page(path, local = {}, session = {}) {
   return { window: dom.window, document, $: selector => document.querySelector(selector), all: selector => [...document.querySelectorAll(selector)] };
 }
 async function main() {
-  const root = await page('/');
+  const root = await page('/match');
   await wait(() => !root.$('#submit-button').disabled, 'metadata');
   assert.equal(root.all('.demo-button').length, 6);
   root.$('[data-demo="corporate"]').click();
@@ -123,7 +123,7 @@ async function main() {
   history.$('.history-card .portal-button').click();
   const session = snapshot(history.window.sessionStorage);
   assert(session['firebird.prefill']);
-  const rerun = await page('/', local, session);
+  const rerun = await page('/match', local, session);
   await wait(() => rerun.all('.contractor-card').length === 1, 'history rerun');
   assert.equal(rerun.$('#budget_kzt').value, '500000');
   assert.equal(rerun.window.sessionStorage.getItem('firebird.prefill'), null);

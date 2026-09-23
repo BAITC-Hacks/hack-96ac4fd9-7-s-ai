@@ -4,7 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const text = {
     kk: {
-      navMatching: "Іріктеу", navCatalog: "Каталог", navSaved: "Таңдаулылар", navCompare: "Салыстыру", navHistory: "Іздеу тарихы",
+      navHome: "Басты бет", navPlanner: "Менің іс-шарам", navMatching: "Іріктеу", navCatalog: "Каталог", navSaved: "Таңдаулылар", navCompare: "Салыстыру", navHistory: "Іздеу тарихы",
       viewProfile: "Профильді ашу ↗", saveProfile: "♡ Таңдаулыға", savedProfile: "♥ Сақталды", compareProfile: "+ Салыстыру", comparedProfile: "✓ Салыстыруда",
       compareFull: "Бір мезетте ең көбі 3 мердігерді салыстыруға болады. Салыстыру бетінде біреуін алып тастаңыз.",
       comparePrompt: "Айырмашылықты бір кестеден көріңіз: баға, тіл, формат және бос күн.", compareOpen: "Салыстыруды ашу →",
@@ -37,7 +37,7 @@
       loadingCatalog: "Каталог жүктеліп жатыр…", resetFilters: "Шарттарды өзгертіп, қайта таңдаңыз.", availableDate: "Каталогта бұл күн бос емес деп белгіленбеген."
     },
     ru: {
-      navMatching: "Подбор", navCatalog: "Каталог", navSaved: "Избранное", navCompare: "Сравнение", navHistory: "История",
+      navHome: "Главная", navPlanner: "Моё событие", navMatching: "Подбор", navCatalog: "Каталог", navSaved: "Избранное", navCompare: "Сравнение", navHistory: "История",
       viewProfile: "Открыть профиль ↗", saveProfile: "♡ В избранное", savedProfile: "♥ Сохранено", compareProfile: "+ Сравнить", comparedProfile: "✓ В сравнении",
       compareFull: "Можно сравнить не больше 3 подрядчиков. Удалите одного на странице сравнения.",
       comparePrompt: "Сравните цену, языки, форматы и доступность на дату в одной таблице.", compareOpen: "Открыть сравнение →",
@@ -500,6 +500,13 @@
         const previous = sessionStorage.getItem("firebird.lastQuery");
         if (prefill || previous) restored = JSON.parse(prefill || previous);
         if (prefill) sessionStorage.removeItem("firebird.prefill");
+      } catch {}
+      try {
+        const urlPrefill = new URLSearchParams(location.search).get("prefill");
+        if (urlPrefill && urlPrefill.length <= 2000) {
+          restored = JSON.parse(urlPrefill);
+          history.replaceState(null, "", location.pathname);
+        }
       } catch {}
       if (restored && typeof restored === "object") {
         fillQuery(restored);
