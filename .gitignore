@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+**/.status/
+backend/data/
+backend/public/generated/
+*.log

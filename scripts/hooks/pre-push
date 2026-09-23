@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks `git push` unless scripts/check.ps1 passes.
+root="$(git rev-parse --show-toplevel)"
+echo "[pre-push] running scripts/check.ps1 ..."
+if command -v powershell.exe >/dev/null 2>&1; then
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$root/scripts/check.ps1"
+elif command -v pwsh >/dev/null 2>&1; then
+  pwsh -NoProfile -File "$root/scripts/check.ps1"
+else
+  echo "[pre-push] PowerShell not found - check skipped!"
+  exit 0
+fi
