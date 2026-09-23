@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ee">
+  <meta name="description" content="Іс-шараңызға ең сәйкес үш мердігер. Firebird — нақты дерекке сүйенген ақылды іріктеу.">
+  <title>Firebird — Іс-шараңызға дәл таңдау</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23ee5937'/%3E%3Cpath d='m11 29 6-19 13 7-10 1 6 11-10-6z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#request-form" data-i18n="skip">Сұранысқа өту</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Firebird">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="m10 29 7-20 14 8-12 1 8 13-12-7-5 5Z" fill="currentColor"/><path d="m21 9 9-3-3 9-6-6Z" fill="currentColor" opacity=".55"/></svg></span>
+      <span>firebird<span class="brand-dot">.</span></span>
+    </a>
+    <span class="header-caption" data-i18n="headerCaption">Каталогтан дәл таңдау</span>
+    <div class="header-actions"><span class="catalog-badge"><span class="status-dot"></span><span id="catalog-count">66</span> <span data-i18n="profiles">профиль</span></span>
+      <div class="language-switch" aria-label="Тіл / Язык"><button type="button" class="active" data-language="kk" aria-pressed="true">ҚАЗ</button><button type="button" data-language="ru" aria-pressed="false">РУС</button></div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div><div class="eyebrow"><span class="small-spark" aria-hidden="true">✳</span> <span data-i18n="eyebrow">СӘТТІ ІС-ШАРА ОСЫНДАН БАСТАЛАДЫ</span></div>
+        <h1 id="page-title" data-i18n="title">Іс-шараңызға дәл келетін адамдар.</h1>
+        <p data-i18n="subtitle">Шарттарыңызды айтыңыз. Біз ең сәйкес үш нұсқаны ұсынып, әр таңдауды түсіндіреміз.</p>
+      </div>
+      <span class="intro-note"><span class="note-number">66<span>→</span>3</span><span data-i18n="introNote">ұзын тізімнен нақты таңдауға</span></span>
+    </section>
+
+    <div class="workspace">
+      <aside class="request-panel" aria-labelledby="request-title">
+        <div class="panel-heading"><div><span class="section-index">01 /</span><h2 id="request-title" data-i18n="requestTitle">Сіздің іс-шараңыз</h2></div><span class="step-icon" aria-hidden="true">↗</span></div>
+        <form id="request-form">
+          <div class="field-row">
+            <div class="field"><label for="city" data-i18n="city">Қала</label><div class="select-wrap"><select id="city" name="city" required disabled></select></div></div>
+            <div class="field"><label for="date" data-i18n="date">Күні</label><input id="date" name="date" type="date" value="2026-10-09" min="2026-09-23" max="2026-12-31" required></div>
+          </div>
+          <div class="field"><label for="event_format" data-i18n="eventFormat">Іс-шара форматы</label><div class="select-wrap"><select id="event_format" name="event_format" required disabled></select></div></div>
+          <div class="field"><label for="category" data-i18n="category">Кім керек?</label><div class="select-wrap"><select id="category" name="category" required disabled></select></div></div>
+          <div class="field"><label for="budget_kzt" data-i18n="budget">Бюджет шегі</label><div class="input-suffix"><input id="budget_kzt" name="budget_kzt" type="number" min="0" max="1000000000" step="1" value="1000000" inputmode="numeric" required><span>₸</span></div><span class="field-hint" id="budget-readable">1 000 000 ₸</span></div>
+          <details class="extra-options" id="extra-options"><summary><span data-i18n="extraOptions">Қосымша шарттар</span><span class="optional-label" data-i18n="optional">міндетті емес</span></summary>
+            <div class="extra-fields"><div class="field-row"><div class="field"><label for="language" data-i18n="language">Қызмет көрсету тілі</label><div class="select-wrap"><select id="language" name="language" disabled></select></div></div><div class="field"><label for="duration_hours" data-i18n="duration">Ұзақтығы, сағат</label><input id="duration_hours" name="duration_hours" type="number" min="0.5" max="48" step="0.5" value="4" placeholder="4"></div></div>
+              <div class="field"><label for="preferences" data-i18n="preferences">Ерекше тілектер</label><textarea id="preferences" name="preferences" maxlength="500" rows="2" data-placeholder="preferencesPlaceholder" placeholder="Мысалы, командалық ойындар, жайлы атмосфера…"></textarea><span class="field-hint" data-i18n="preferencesHint">Сипаттамадағы сәйкес ерекшеліктерді ескереміз.</span></div>
+            </div>
+          </details>
+          <div class="form-notice" id="form-notice" hidden><span aria-hidden="true">↻</span><span data-i18n="formChanged">Шарттар өзгерді. Нәтижені жаңартыңыз.</span></div>
+          <button class="submit-button" id="submit-button" type="submit" disabled><span class="button-text" data-i18n="find">Мердігерлерді таңдау</span><svg class="button-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="button-spinner" aria-hidden="true"></span></button>
+          <p class="form-footnote"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span data-i18n="formFootnote">Ең көбі 3 нұсқа. Әрқайсысының нақты себебі бар.</span></p>
+          <div class="error-banner" id="error-banner" role="alert" hidden></div>
+        </form>
+      </aside>
+
+      <section class="results-section" aria-labelledby="results-title" aria-busy="false">
+        <div class="results-heading"><div><span class="section-index">02 /</span><h2 id="results-title" data-i18n="resultsTitle">Сізге арналған таңдау</h2></div><span id="results-count" class="results-count" hidden></span></div>
+        <div class="live-status sr-only" id="live-status" aria-live="polite" aria-atomic="true"></div>
+        <div id="results-content">
+          <div class="welcome-state" id="welcome-state">
+            <div class="match-art" aria-hidden="true">
+              <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+              <span class="art-dot dot-one"></span><span class="art-dot dot-two"></span><span class="art-plus">+</span>
+              <div class="mini-card card-back"><span class="mini-avatar"></span><div class="mini-lines"><i></i><i></i></div></div>
+              <div class="mini-card card-mid"><span class="mini-avatar"></span><div class="mini-lines"><i></i><i></i></div></div>
+              <div class="mini-card card-front"><span class="mini-avatar"><svg width="29" height="29" viewBox="0 0 30 30" fill="none"><path d="m8 16 5 5 10-12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="mini-lines"><i></i><i></i></div><span class="art-star">✳</span></div>
+              <div class="art-caption"><span class="status-dot"></span><span data-i18n="artCaption">Сәйкестік — нақты деректе</span></div>
+            </div>
+            <h3 data-i18n="welcomeTitle">Ұзын тізімнің қажеті жоқ.</h3><p data-i18n="welcomeText">Іс-шара шарттарын толтырыңыз — қала, күн мен бюджетке сәйкес мердігерлерді осы жерден көресіз.</p>
+            <div class="trust-points"><span><span class="trust-icon">✓</span><span data-i18n="trustDate">Күнге сәйкестік</span></span><span><span class="trust-icon">✓</span><span data-i18n="trustBudget">Бюджетке сай</span></span><span><span class="trust-icon">✓</span><span data-i18n="trustEvidence">Дәлелді таңдау</span></span></div>
+          </div>
+        </div>
+        <section class="demo-section" aria-labelledby="demo-title"><div class="demo-heading"><h3 id="demo-title" data-i18n="demoTitle">Дайын мысалдан бастаңыз</h3><span data-i18n="demoHint">бір басу жеткілікті</span></div><div id="demo-list" class="demo-list"></div></section>
+      </section>
+    </div>
+    <footer class="site-footer"><span><span class="footer-brand">firebird.</span> <span data-i18n="footer">Каталог деректеріне сүйенген таңдау</span></span><span data-i18n="footerPrice">«Бастап» бағасы. Соңғы құнды мердігермен нақтылаңыз.</span></footer>
+  </main>
+</body>
+</html>
