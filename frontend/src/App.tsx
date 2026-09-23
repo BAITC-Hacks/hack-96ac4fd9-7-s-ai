@@ -7,6 +7,9 @@ import MatchResults from './components/MatchResults';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { useLocale } from './components/LocaleProvider';
 import { localizeError } from './lib/messages';
+import { API_LOCALES } from './lib/locale';
+import HowItWorks from './components/HowItWorks';
+import AnimatedBackground from './components/AnimatedBackground';
 
 export default function App() {
   const { locale, t } = useLocale();
@@ -18,6 +21,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState<CreateMatchInput>();
   const inFlight = useRef(false);
+  const resultsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -33,15 +37,27 @@ export default function App() {
     return () => { active = false; };
   }, [catalogAttempt]);
 
-  async function search(input: CreateMatchInput) {
+  // Backend texts are generated per locale, so a language switch re-asks for the same search.
+  const lastLocale = useRef(locale);
+  useEffect(() => {
+    if (lastLocale.current === locale) return;
+    lastLocale.current = locale;
+    if (!USE_MOCKS && submitted && (result || error)) void search(submitted, true);
+  }, [locale]);
+
+  async function search(input: CreateMatchInput, keepResult = false) {
     if (inFlight.current) return;
     inFlight.current = true;
     setPending(true);
     setSubmitted({ ...input });
     setError('');
-    setResult(null);
+    if (!keepResult) {
+      setResult(null);
+      // On narrow screens the results render below the fold; bring them into view.
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+    }
     try {
-      const response = await createMatch(input);
+      const response = await createMatch({ ...input, locale: API_LOCALES[locale] });
       if (response.ok) setResult(response.data);
       else setError(response.error.message);
     } catch {
@@ -52,23 +68,47 @@ export default function App() {
     }
   }
 
-  return <main className="mx-auto max-w-6xl px-5 py-10">
-    <div className="flex flex-wrap items-start justify-between gap-4"><p className="text-sm font-semibold text-teal-800">{t('brand')}</p><LanguageSwitcher /></div>
-    <h1 className="mt-3 text-3xl font-semibold">{t('headline')}</h1>
-    <p className="mt-3 text-slate-600">{t('intro')}</p>
-    {USE_MOCKS && <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{t('demo')}</p>}
-    <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-      <div>{catalog ? <RequestForm key={JSON.stringify(submitted)} initialInput={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />
-        : catalogError ? <div className="panel" role="alert"><p>{localizeError(catalogError, locale)}</p><button className="secondary mt-4" onClick={() => setCatalogAttempt((value) => value + 1)}>{t('catalogRetry')}</button></div>
-          : <p role="status" className="panel">{t('catalogLoading')}</p>}</div>
-      <section aria-label={t('results')} aria-busy={pending} aria-live="polite" className="space-y-4">
-        {submitted && catalog && <RequestSummary key={JSON.stringify(submitted)} input={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />}
-        {pending && <p role="status" className="panel">{t('checking')}</p>}
-        {error && <div role="alert" className="panel text-red-800"><h2 className="font-semibold">{t('searchFailed')}</h2><p className="mt-2">{localizeError(error, locale)}</p>{submitted && <button className="secondary mt-4" onClick={() => void search(submitted)}>{t('retry')}</button>}</div>}
-        {result && !USE_MOCKS && locale !== 'ru' && <p className="text-sm text-slate-600">{t('originalContent')}</p>}
-        {result && submitted && <MatchResults result={localizeMatchResult(result, submitted, locale)} />}
-        {!pending && !result && !error && <div className="panel text-slate-600"><h2 className="font-semibold text-slate-900">{t('emptyTitle')}</h2><p className="mt-2">{t('emptyHelp')}</p></div>}
+  return <>
+    <AnimatedBackground />
+    <header className="sticky top-0 z-20 border-b border-hairline bg-canvas/80 backdrop-blur-md">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <p className="flex min-w-0 items-center gap-2.5 font-bold text-accent">
+          <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm text-white">M</span>
+          <span className="truncate">{t('brand')}</span>
+        </p>
+        <LanguageSwitcher />
+      </div>
+    </header>
+    <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+      <section className="pt-10 pb-10">
+        <h1 className="text-[28px] font-bold leading-tight">{t('headline')}</h1>
+        <p className="mt-2 max-w-2xl text-base text-muted">{t('intro')}</p>
+        {USE_MOCKS && <p className="chip mt-4 bg-surface-soft">{t('demo')}</p>}
+        <div className="mt-8">{catalog ? <RequestForm key={JSON.stringify(submitted)} initialInput={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />
+          : catalogError ? <div className="panel" role="alert"><p>{localizeError(catalogError, locale)}</p><button className="secondary mt-4" onClick={() => setCatalogAttempt((value) => value + 1)}>{t('catalogRetry')}</button></div>
+            : <p role="status" className="panel text-muted">{t('catalogLoading')}</p>}</div>
       </section>
-    </div>
-  </main>;
+      <section ref={resultsRef} aria-label={t('results')} aria-busy={pending} aria-live="polite" className="scroll-mt-6 space-y-6">
+        {submitted && catalog && <RequestSummary key={JSON.stringify(submitted)} input={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />}
+        {pending && <div>
+          <p role="status" className="text-sm text-muted">{t('checking')}</p>
+          <div aria-hidden="true" className="mt-4 grid gap-4 lg:grid-cols-3">
+            {[0, 1, 2].map((index) => <div key={index} className="h-64 animate-pulse rounded-card bg-surface-soft" />)}
+          </div>
+        </div>}
+        {error && <div role="alert" className="panel">
+          <h2 className="text-xl font-semibold text-error">{t('searchFailed')}</h2>
+          <p className="mt-2 text-body">{localizeError(error, locale)}</p>
+          {submitted && <button className="secondary mt-4" onClick={() => void search(submitted)}>{t('retry')}</button>}
+        </div>}
+        {result && !pending && !USE_MOCKS && locale !== 'ru' && <p className="text-sm text-muted">{t('originalContent')}</p>}
+        {result && !pending && submitted && <MatchResults result={localizeMatchResult(result, submitted, locale)} />}
+        {!pending && !result && !error && <div className="rounded-card bg-surface-soft p-8">
+          <h2 className="text-xl font-semibold">{t('emptyTitle')}</h2>
+          <p className="mt-2 max-w-2xl text-body">{t('emptyHelp')}</p>
+        </div>}
+      </section>
+      <HowItWorks />
+    </main>
+  </>;
 }

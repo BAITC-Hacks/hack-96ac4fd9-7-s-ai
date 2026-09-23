@@ -11,6 +11,9 @@ export default defineConfig(({ command, mode }) => {
         env.VITE_USE_MOCKS ?? (command === 'serve' ? 'true' : 'false'),
       ),
     },
-    server: { port: 5173, strictPort: true, proxy: { '/api': 'http://localhost:8787' } },
+    server: {
+      port: 5173, strictPort: true, proxy: { '/api': 'http://localhost:8787' },
+      watch: { ignored: ['**/.design-references/**'] },
+    },
   };
 });

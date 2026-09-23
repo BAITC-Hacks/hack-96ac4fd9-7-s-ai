@@ -1,19 +1,76 @@
 @import "tailwindcss";
 
+/* Design tokens follow frontend/DESIGN.md (warm marketplace system): white canvas, ink text,
+   one accent reserved for primary actions, soft radii, a single shadow tier. */
+@theme {
+  --color-accent: #ff385c;
+  --color-accent-active: #e00b41;
+  --color-accent-disabled: #ffd1da;
+  --color-error: #c13515;
+  --color-ink: #222222;
+  --color-body: #3f3f3f;
+  --color-muted: #6a6a6a;
+  --color-muted-soft: #929292;
+  --color-hairline: #dddddd;
+  --color-hairline-soft: #ebebeb;
+  --color-border-strong: #c1c1c1;
+  --color-canvas: #ffffff;
+  --color-surface-soft: #f7f7f7;
+  --color-surface-strong: #f2f2f2;
+  --radius-card: 14px;
+  --shadow-float: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 6px 0 rgba(0, 0, 0, 0.04), 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+  --font-sans: Inter, -apple-system, system-ui, Roboto, "Helvetica Neue", sans-serif;
+}
+
 @layer base {
-  body { @apply m-0 bg-stone-50 text-slate-900 antialiased; font-family: Arial, sans-serif; }
-  button, input, select { font: inherit; }
+  body { @apply m-0 bg-canvas font-sans text-ink antialiased; }
+  button, input, select { font: inherit; color: inherit; }
   button { @apply cursor-pointer; }
-  button:disabled { @apply cursor-wait opacity-60; }
-  input:disabled, select:disabled { @apply opacity-60; }
+  button:disabled { @apply cursor-wait; }
+  fieldset { @apply m-0 min-w-0 border-0 p-0; }
   article, section { overflow-wrap: anywhere; }
-  :focus-visible { @apply outline-2 outline-offset-4 outline-teal-700; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-ink; }
 }
 
 @layer components {
-  .panel { @apply rounded-2xl border border-stone-200 bg-white p-5 sm:p-6; }
-  .field { @apply flex min-w-0 flex-col gap-2 text-sm font-semibold text-slate-700; }
-  .field input, .field select { @apply min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal text-slate-900; }
-  .primary { @apply min-h-11 rounded-lg bg-teal-900 px-5 py-3 font-semibold text-white hover:bg-teal-800; }
-  .secondary { @apply min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50; }
+  .panel { @apply rounded-card border border-hairline bg-canvas p-6; }
+  .micro-label { @apply text-xs font-bold text-ink; }
+
+  /* Search pill: segments separated by hairlines, ending in a round accent button. */
+  .search-pill { @apply flex flex-col rounded-card border border-hairline bg-canvas shadow-float lg:flex-row lg:items-center lg:rounded-full lg:py-2 lg:pr-2 lg:pl-2; }
+  .segment { @apply flex min-w-0 flex-1 flex-col gap-0.5 border-b border-hairline px-6 py-3 lg:rounded-full lg:border-b-0 lg:border-r lg:py-2 hover:bg-surface-soft; }
+  .segment-label { @apply text-xs font-bold text-ink; }
+  .segment input { @apply w-full min-w-0 appearance-none truncate border-0 bg-transparent p-0 text-sm text-muted outline-none; }
+  .segment input:focus-visible { @apply text-ink; }
+
+  /* Custom dropdown: the whole segment is the trigger; the panel floats above the page. */
+  .segment-shell { @apply relative min-w-0 flex-1 border-b border-hairline lg:border-b-0 lg:border-r; }
+  .segment-trigger { @apply flex w-full min-w-0 flex-col items-start gap-0.5 px-6 py-3 text-left outline-none hover:bg-surface-soft focus-visible:bg-surface-soft lg:rounded-full lg:py-2 aria-expanded:bg-surface-strong; }
+  .dropdown-field { @apply flex h-12 w-full items-center rounded-lg border border-hairline bg-canvas px-3 text-left text-base font-normal outline-none aria-expanded:border-2 aria-expanded:border-ink focus-visible:border-2 focus-visible:border-ink; }
+  .dropdown-panel { @apply absolute top-full left-0 z-30 mt-2 max-h-80 w-max min-w-full max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-hairline bg-canvas p-2 shadow-float outline-none sm:max-w-[22rem]; }
+  /* Visibility follows React state, not the animation, so the list is focusable on the same frame it opens. */
+  .dropdown-panel[data-open='false'] { @apply pointer-events-none; }
+  .dropdown-panel[data-visible='false'] { @apply invisible; }
+  .calendar-panel { @apply absolute top-full left-0 z-30 mt-2 w-[20rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-hairline bg-canvas p-4 text-ink shadow-float; }
+  .calendar-panel[data-open='false'] { @apply pointer-events-none; }
+  .calendar-panel[data-visible='false'] { @apply invisible; }
+  .calendar-nav { @apply flex size-8 items-center justify-center rounded-full border border-hairline bg-canvas text-ink hover:border-ink disabled:cursor-default disabled:opacity-30 disabled:hover:border-hairline; }
+  .calendar-day { @apply mx-auto flex size-10 items-center justify-center rounded-full border border-transparent text-sm font-medium outline-none hover:border-ink focus-visible:border-ink focus-visible:border-2; }
+  .calendar-day[aria-pressed='true'] { @apply bg-ink font-semibold text-white hover:border-ink; }
+  .calendar-day:disabled { @apply cursor-default text-muted-soft line-through opacity-60 hover:border-transparent; }
+  .dropdown-option { @apply flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink transition-colors; }
+  .dropdown-option[data-active='true'] { @apply bg-surface-soft; }
+  .dropdown-option[aria-selected='true'] { @apply font-semibold; }
+  .search-orb { @apply m-3 flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-6 font-medium text-white hover:bg-accent-active disabled:bg-accent-disabled lg:m-0 lg:w-12 lg:rounded-full lg:px-0; }
+
+  .field { @apply flex min-w-0 flex-col gap-1.5 text-sm font-medium text-muted; }
+  .field input, .field select { @apply h-12 w-full rounded-lg border border-hairline bg-canvas px-3 text-base font-normal text-ink focus:border-2 focus:border-ink focus:outline-none; }
+  .field-compact input { @apply h-10 text-sm; }
+
+  .primary { @apply h-12 rounded-lg bg-accent px-6 font-medium text-white hover:bg-accent-active disabled:bg-accent-disabled; }
+  .secondary { @apply h-10 rounded-lg border border-ink bg-canvas px-5 text-sm font-medium text-ink hover:bg-surface-soft disabled:opacity-50; }
+  .chip { @apply inline-flex items-center rounded-full border border-hairline bg-canvas px-3 py-1 text-sm text-ink; }
+  .badge { @apply inline-flex items-center rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink shadow-float; }
+  .avatar { @apply flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-strong text-base font-semibold text-ink; }
+  .step-dot { @apply flex size-8 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white; }
 }

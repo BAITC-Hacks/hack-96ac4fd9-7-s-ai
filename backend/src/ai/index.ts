@@ -60,7 +60,8 @@ export function createExplainer(options: ExplainerOptions = {}): Explainer {
     const cacheKey = createHash('sha256').update(JSON.stringify({
       datasetVersion, ranking: RANKING_VERSION, prompt: EXPLANATION_VERSION, models: [OPENAI_MODEL, NVIDIA_MODEL],
       input: { city: input.city, eventDate: input.eventDate, eventType: input.eventType, category: input.category,
-        budgetKzt: input.budgetKzt, language: input.language ?? null, durationHours: input.durationHours ?? null },
+        budgetKzt: input.budgetKzt, language: input.language ?? null, durationHours: input.durationHours ?? null,
+        locale: input.locale ?? 'kz' },
       choices,
     })).digest('hex');
     const cached = cache?.get(cacheKey);

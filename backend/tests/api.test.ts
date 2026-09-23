@@ -25,7 +25,7 @@ test('HTTP contract, CORS, validation, empty states and AI failure fallback', as
   assert.ok(found.ok);
   assert.equal(found.data.status, 'found');
   assert.ok(found.data.cards.every(card => card.explanation.includes('Профильдегі дерек')));
-  assert.deepEqual(Object.keys(found.data).sort(), ['candidatesBeforeCut', 'cards', 'message', 'status']);
+  assert.deepEqual(Object.keys(found.data).sort(), ['candidatesBeforeCut', 'cards', 'message', 'notShown', 'status']);
   for (const [change, status] of [[{ budgetKzt: 1 }, 'no_match'], [{ city: 'Астана', category: 'Декоратор' }, 'no_category']] as const) {
     const response = await post({ ...query, ...change });
     const body = await response.json() as ApiResponse<MatchResult>;

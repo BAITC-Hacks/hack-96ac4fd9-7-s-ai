@@ -22,7 +22,8 @@ try {
   assert.match(found, /Цена дополнена/);
   assert.match(found, /Почему подходит/);
   assert.match(found, /от 120/);
-  assert.doesNotMatch(found, /рейтинг|звезд|звёзд|%|Керемет таңдау/i);
+  // Visible text only: attributes may hold encoded SVG avatars, but no fake ratings or "98% match" may be shown.
+  assert.doesNotMatch(found.replace(/<[^>]+>/g, ' '), /рейтинг|звезд|звёзд|%|Керемет таңдау/i);
   const noCategory = render(MatchResults, { result: NO_CATEGORY_FIXTURE });
   assert.match(noCategory, /В этом городе нет такой категории/);
   assert.doesNotMatch(noCategory, /<article/);

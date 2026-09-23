@@ -1,10 +1,16 @@
 import type { CatalogOptions, CreateMatchInput, Language } from '../../../shared/types';
 
+// The dataset's busy-date calendars cover exactly this window; the backend rejects other dates.
+export const MIN_EVENT_DATE = '2026-09-23';
+export const MAX_EVENT_DATE = '2026-12-31';
+
 export function validateInput(input: CreateMatchInput, catalog: CatalogOptions): string | null {
   if (!catalog.cities.includes(input.city) || !catalog.categories.includes(input.category)
     || !catalog.eventFormats.includes(input.eventType)) return 'Выберите город, формат и категорию из каталога.';
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.eventDate) || !Number.isFinite(Date.parse(input.eventDate))
     || new Date(input.eventDate).toISOString().slice(0, 10) !== input.eventDate) return 'Укажите действительную дату мероприятия.';
+  if (input.eventDate < MIN_EVENT_DATE || input.eventDate > MAX_EVENT_DATE)
+    return 'Календарь каталога охватывает 23.09.2026–31.12.2026. Выберите дату в этом диапазоне.';
   if (!Number.isFinite(input.budgetKzt) || input.budgetKzt <= 0) return 'Бюджет должен быть больше нуля.';
   if (input.durationHours !== undefined && (!Number.isFinite(input.durationHours) || input.durationHours <= 0))
     return 'Длительность должна быть больше нуля.';

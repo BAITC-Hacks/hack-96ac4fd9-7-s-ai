@@ -1,4 +1,8 @@
+import type { Language } from '../../../shared/types';
+
 export type UiLocale = 'kk' | 'ru' | 'en';
+// The API contract names Kazakh 'kz'; the UI and <html lang> use the ISO code 'kk'.
+export const API_LOCALES: Record<UiLocale, Language> = { kk: 'kz', ru: 'ru', en: 'en' };
 export const UI_LOCALES: UiLocale[] = ['kk', 'ru', 'en'];
 export const LOCALE_NAMES: Record<UiLocale, string> = { kk: 'Қазақша', ru: 'Русский', en: 'English' };
 export const INTL_LOCALES: Record<UiLocale, string> = { kk: 'kk-KZ', ru: 'ru-RU', en: 'en-GB' };

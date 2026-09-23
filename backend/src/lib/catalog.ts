@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { parse } from 'csv-parse/sync';
 import { z } from 'zod';
 import type { CatalogOptions, Language } from '../../../shared/types.js';
+import type { Gender } from './gender.js';
+import { withDisplayNames } from './displayNames.js';
 
 export const MIN_EVENT_DATE = '2026-09-23';
 export const MAX_EVENT_DATE = '2026-12-31';
@@ -10,7 +12,10 @@ export const DATASET_PATH = new URL('../../data/contractors.csv', import.meta.ur
 
 export interface Contractor {
   id: string;
+  /** Kazakh display name (the dataset's invented names are replaced, see displayNames.ts). */
   name: string;
+  kind: 'person' | 'place';
+  gender: Gender | null;
   categories: string[];
   city: string;
   priceFromKzt: number;
@@ -55,7 +60,7 @@ export function parseCatalog(csv: string): Catalog {
   const raw: unknown = parse(csv, { columns: true, bom: true, skip_empty_lines: true, trim: true });
   const rows = z.array(rowSchema).min(1).parse(raw);
   const seenIds = new Set<string>();
-  const contractors: Contractor[] = rows.map(row => {
+  const parsed: Omit<Contractor, 'kind' | 'gender'>[] = rows.map(row => {
     if (seenIds.has(row.id)) throw new Error(`Duplicate contractor ID: ${row.id}`);
     seenIds.add(row.id);
     const busyDates = splitList(row.busy_dates);
@@ -72,6 +77,7 @@ export function parseCatalog(csv: string): Catalog {
       maxHours: row.max_hours, busyDates: new Set(busyDates), description: row.description,
       synthetic: row.synthetic, cityImputed: row.city_imputed, priceImputed: row.price_imputed };
   });
+  const contractors = withDisplayNames(parsed);
   return {
     contractors,
     options: {

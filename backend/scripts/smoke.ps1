@@ -1,4 +1,4 @@
-param([string]$BaseUrl = 'http://127.0.0.1:8787')
+﻿param([string]$BaseUrl = 'http://127.0.0.1:8787')
 $ErrorActionPreference = 'Stop'
 $statusDirectory = Join-Path $PSScriptRoot '..\.status'
 New-Item -ItemType Directory -Force $statusDirectory | Out-Null

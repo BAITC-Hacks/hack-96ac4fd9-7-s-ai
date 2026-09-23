@@ -13,9 +13,11 @@ export function createMatchSchema(options: CatalogOptions): z.ZodType<CreateMatc
     budgetKzt: z.number().finite().int().positive().max(Number.MAX_SAFE_INTEGER),
     durationHours: z.number().finite().positive().optional(),
     language: z.enum(['ru', 'kz', 'en']).optional(),
-  }).strict().transform(({ durationHours, language, ...required }) => ({
+    locale: z.enum(['ru', 'kz', 'en']).optional(),
+  }).strict().transform(({ durationHours, language, locale, ...required }) => ({
     ...required,
     ...(durationHours === undefined ? {} : { durationHours }),
     ...(language === undefined ? {} : { language }),
+    ...(locale === undefined ? {} : { locale }),
   }));
 }

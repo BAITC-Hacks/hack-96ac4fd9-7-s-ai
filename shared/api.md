@@ -36,6 +36,14 @@ Body: `CreateMatchInput`
 → `ApiResponse<MatchResult>` (синхронно, цель — до 10 секунд)
 Ошибки: `VALIDATION` (не заполнено обязательное поле: city/eventDate/eventType/category/budgetKzt)
 
+`notShown` — все подрядчики того же города и категории, не попавшие в карточки, с кодами причин
+(`busy`, `budget`, `format`, `language`, `duration`; `rankedLower` — прошёл все условия, но ниже топ-3).
+Сначала `rankedLower` в порядке ранжирования, затем отсеянные по `id`. Для `no_category` — пустой массив.
+
+`locale` (`kz` | `ru` | `en`, по умолчанию `kz`) — язык текстов `explanation` и `message`.
+Цитата из профиля остаётся на языке оригинала (русский). `locale` не влияет ни на состав,
+ни на порядок карточек: одинаковые параметры с разным `locale` дают те же `id` в том же порядке.
+
 Логика на бэке (не меняется без согласования):
 1. Жёсткие фильтры кодом (не LLM): занятость на `eventDate` по `busy_dates`,
    `city`, `category`, `price_from_kzt <= budgetKzt`, затем если заданы — `language`,

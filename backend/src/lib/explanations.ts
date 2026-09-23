@@ -1,11 +1,10 @@
-import type { CreateMatchInput, Language } from '../../../shared/types.js';
+import type { CreateMatchInput } from '../../../shared/types.js';
 import type { Contractor } from './catalog.js';
-
-const LANGUAGE_NAMES: Record<Language, string> = { ru: 'орыс', kz: 'қазақ', en: 'ағылшын' };
-const money = (amount: number) => new Intl.NumberFormat('kk-KZ').format(amount).replaceAll('\u00a0', ' ');
+import { factSentences, localeOf, quotePrefix, type Locale } from './i18n.js';
 
 export interface ExplanationChoices {
   id: string;
+  locale: Locale;
   evidence: string[];
   facts: string[];
 }
@@ -33,17 +32,16 @@ export function explanationChoices(profile: Contractor, input: CreateMatchInput)
     const boundary = excerpt.lastIndexOf(' ');
     evidence.push(clean.length <= 260 ? clean : `${boundary > 0 ? excerpt.slice(0, boundary) : excerpt}…`);
   }
-  const price = `бастапқы бағасы ${money(profile.priceFromKzt)} ₸`;
-  const budget = profile.priceFromKzt === input.budgetKzt ? 'бюджетке тең' : `бюджеттен ${money(input.budgetKzt - profile.priceFromKzt)} ₸ төмен`;
-  const base = `Дерек күнтізбесінде ${input.eventDate} күні бос; «${input.eventType}» форматын қабылдайды; ${price}, ${budget}`;
-  const language = input.language ? `${LANGUAGE_NAMES[input.language]} тілінде жұмыс істейді` : `жұмыс тілдері: ${profile.languages.map(item => LANGUAGE_NAMES[item]).join(', ')}`;
-  const duration = input.durationHours === undefined ? null : profile.maxHours === null
-    ? `сұралған ${input.durationHours} сағатқа қатысу ұзақтығы бойынша шектеу қолданылмайды`
-    : `сұралған ${input.durationHours} сағатқа жеткілікті, ең көбі ${profile.maxHours} сағат`;
+  const locale = localeOf(input);
+  const { base, language, duration } = factSentences(locale, {
+    date: input.eventDate, eventType: input.eventType, price: profile.priceFromKzt, budget: input.budgetKzt,
+    requestedLanguage: input.language, languages: profile.languages,
+    durationHours: input.durationHours, maxHours: profile.maxHours,
+  });
   const facts = [`${base}; ${language}${duration ? `; ${duration}` : ''}.`];
   facts.push(`${base}; ${language}.`);
   if (duration) facts.push(`${base}; ${duration}.`);
-  return { id: profile.id, evidence, facts: [...new Set(facts)] };
+  return { id: profile.id, locale, evidence, facts: [...new Set(facts)] };
 }
 
 export function assembleExplanation(choices: ExplanationChoices, evidenceIndex = 0, factIndex = 0): string {
@@ -51,7 +49,7 @@ export function assembleExplanation(choices: ExplanationChoices, evidenceIndex =
   const fact = choices.facts[factIndex];
   if (!evidence || !fact) throw new Error('Invalid explanation selection.');
   const excerpt = evidence.replace(/[.!?]+$/u, '');
-  return `Профильдегі дерек: «${excerpt}». ${fact}`;
+  return `${quotePrefix(choices.locale, excerpt)} ${fact}`;
 }
 
 export function templateExplanation(profile: Contractor, input: CreateMatchInput): string {
