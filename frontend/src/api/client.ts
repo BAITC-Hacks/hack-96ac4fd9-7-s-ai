@@ -1,5 +1,7 @@
 import type { ApiResponse, CatalogOptions, CreateMatchInput, MatchResult } from '../../../shared/types';
 import { isCatalogOptions, isHealth, isMatchResult } from './validation';
+import type { UiLocale } from '../lib/locale';
+import { MOCK_CATALOG, mockCreateMatch } from './mocks';
 
 export const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 const REQUEST_TIMEOUT_MS = 15000;
@@ -43,14 +45,19 @@ export async function getHealth(): Promise<ApiResponse<{ status: 'up' }>> {
 
 export async function getCatalogOptions(): Promise<ApiResponse<CatalogOptions>> {
   if (!USE_MOCKS) return request('/catalog-options', isCatalogOptions);
-  const { MOCK_CATALOG } = await import('./mocks');
   await mockDelay();
   return { ok: true, data: MOCK_CATALOG };
 }
 
 export async function createMatch(input: CreateMatchInput): Promise<ApiResponse<MatchResult>> {
   if (!USE_MOCKS) return request('/match', isMatchResult, input);
-  const { mockCreateMatch } = await import('./mocks');
   await mockDelay();
   return mockCreateMatch(input);
+}
+
+// Local presentation only. No extra HTTP requests or changes to CreateMatchInput.
+export function localizeMatchResult(result: MatchResult, input: CreateMatchInput, locale: UiLocale): MatchResult {
+  if (!USE_MOCKS) return result;
+  const localized = mockCreateMatch(input, locale);
+  return localized.ok ? localized.data : result;
 }

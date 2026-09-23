@@ -16,7 +16,7 @@ interface Props {
 export default function RequestForm({ catalog, pending, onSearch, initialInput }: Props) {
   const { locale, t } = useLocale();
   const [error, setError] = useState('');
-  return <form className="panel" onSubmit={(event) => {
+  return <form noValidate className="panel" onSubmit={(event) => {
     event.preventDefault();
     const input = readForm(event.currentTarget);
     const issue = validateInput(input, catalog);

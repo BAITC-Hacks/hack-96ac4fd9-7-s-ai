@@ -8,9 +8,10 @@ const server = await createServer({
 const originalFetch = globalThis.fetch;
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 try {
-  const { createMatch, getCatalogOptions, getHealth, USE_MOCKS } = await server.ssrLoadModule('/src/api/client.ts');
+  const { createMatch, getCatalogOptions, getHealth, localizeMatchResult, USE_MOCKS } = await server.ssrLoadModule('/src/api/client.ts');
   const { DEMO_INPUT, FOUND_FIXTURE } = await server.ssrLoadModule('/src/api/mocks.ts');
   assert.equal(USE_MOCKS, false);
+  assert.equal(localizeMatchResult(FOUND_FIXTURE, DEMO_INPUT, 'en'), FOUND_FIXTURE);
   globalThis.fetch = async (url, init) => {
     assert.equal(url, '/api/match');
     assert.equal(init.method, 'POST');

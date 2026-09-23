@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CatalogOptions, CreateMatchInput, MatchResult } from '../../shared/types';
-import { createMatch, getCatalogOptions, USE_MOCKS } from './api/client';
+import { createMatch, getCatalogOptions, localizeMatchResult, USE_MOCKS } from './api/client';
 import RequestForm from './components/RequestForm';
 import RequestSummary from './components/RequestSummary';
 import MatchResults from './components/MatchResults';
@@ -66,7 +66,7 @@ export default function App() {
         {pending && <p role="status" className="panel">{t('checking')}</p>}
         {error && <div role="alert" className="panel text-red-800"><h2 className="font-semibold">{t('searchFailed')}</h2><p className="mt-2">{localizeError(error, locale)}</p>{submitted && <button className="secondary mt-4" onClick={() => void search(submitted)}>{t('retry')}</button>}</div>}
         {result && !USE_MOCKS && locale !== 'ru' && <p className="text-sm text-slate-600">{t('originalContent')}</p>}
-        {result && <MatchResults result={result} />}
+        {result && submitted && <MatchResults result={localizeMatchResult(result, submitted, locale)} />}
         {!pending && !result && !error && <div className="panel text-slate-600"><h2 className="font-semibold text-slate-900">{t('emptyTitle')}</h2><p className="mt-2">{t('emptyHelp')}</p></div>}
       </section>
     </div>

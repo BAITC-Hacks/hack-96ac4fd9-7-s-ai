@@ -24,7 +24,7 @@ export default function RequestSummary({ input, catalog, pending, onSearch }: Pr
       {input.durationHours !== undefined && <> · {t('hours', { count: input.durationHours })}</>}
       {input.language && <> · {languageLabel(input.language, locale)}</>}
     </p>
-    <form className="mt-4" onSubmit={(event) => {
+    <form noValidate className="mt-4" onSubmit={(event) => {
       event.preventDefault();
       const data = new FormData(event.currentTarget);
       const next = { ...input, eventDate: String(data.get('eventDate')), budgetKzt: Number(data.get('budgetKzt')) };
