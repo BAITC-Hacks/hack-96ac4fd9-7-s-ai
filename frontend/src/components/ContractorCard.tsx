@@ -4,7 +4,8 @@ import type { ContractorCard as ContractorCardData } from '../../../shared/types
 import { formatMoney } from '../lib/format';
 import { catalogLabel } from '../lib/catalogLabels';
 import type { CSSProperties } from 'react';
-import { avatarHue, avatarUri } from '../lib/avatar';
+import { avatarHue } from '../lib/avatar';
+import GlassAvatar from './GlassAvatar';
 import { useLocale } from './LocaleProvider';
 import FlipCard from './FlipCard';
 import ProfileCard from './ProfileCard';
@@ -25,21 +26,8 @@ const PLACE_ICONS: Record<string, LucideIcon> = {
 const FlipIcon = () => <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-strong text-base">↻</span>;
 
 function Media({ card }: { card: ContractorCardData }) {
+  if (card.kind === 'person' && card.gender) return <GlassAvatar id={card.id} gender={card.gender} />;
   const hue = { '--glass-hue': `${avatarHue(card.id)}deg` } as CSSProperties;
-  if (card.kind === 'person' && card.gender) {
-    const uri = avatarUri(card.id, card.gender);
-    // The portrait's silhouette masks a frosted-glass fill; its drawing stays only as faint etched lines.
-    const mask = { WebkitMaskImage: `url("${uri}")`, maskImage: `url("${uri}")` } as CSSProperties;
-    // The colour blob lives inside the figure: its drop-shadow filter makes it the backdrop root for the glass blur.
-    return <div className="pc-glass" style={hue} aria-hidden="true">
-      <div className="pc-glass-figure">
-        <span className="pc-glass-blob" />
-        <div className="pc-glass-body" style={mask} />
-        <img className="pc-glass-etch" src={uri} alt="" draggable={false} />
-        <div className="pc-glass-shine" style={mask} />
-      </div>
-    </div>;
-  }
   const Icon = PLACE_ICONS[card.category] ?? Building2;
   return <div className="pc-glass" style={hue} aria-hidden="true">
     <span className="pc-glass-blob" />

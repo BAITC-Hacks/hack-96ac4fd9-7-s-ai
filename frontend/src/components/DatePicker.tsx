@@ -16,6 +16,7 @@ interface Props {
   variant?: 'segment' | 'field';
   /** Right-align the popover on wide screens (for fields near the right edge). */
   alignRight?: boolean;
+  className?: string;
 }
 
 // All date maths is done in UTC on ISO "YYYY-MM-DD" strings, so time zones never shift a day.
@@ -50,7 +51,7 @@ const CalendarIcon = () => <svg aria-hidden="true" viewBox="0 0 16 16" className
   <rect x="2" y="3" width="12" height="11" rx="2" /><path d="M2 6.5h12M5.5 1.5v3m5 0v-3" />
 </svg>;
 
-export default function DatePicker({ name, label, min, max, defaultValue = '', placeholder = '', variant = 'segment', alignRight = false }: Props) {
+export default function DatePicker({ name, label, min, max, defaultValue = '', placeholder = '', variant = 'segment', alignRight = false, className = '' }: Props) {
   const { locale, t } = useLocale();
   const reduce = useReducedMotion();
   const id = useId();
@@ -154,7 +155,7 @@ export default function DatePicker({ name, label, min, max, defaultValue = '', p
   const shown = value ? formatDate(value, locale) : placeholder;
   const labelId = `${id}-label`;
 
-  return <div ref={rootRef} className={variant === 'segment' ? 'segment-shell' : 'field field-compact relative'}
+  return <div ref={rootRef} className={`${variant === 'segment' ? 'segment-shell' : 'field field-compact relative'} ${className}`.trim()}
     onKeyDown={onRootKeyDown} onBlur={onRootBlur}>
     {variant === 'field' && <span id={labelId}>{label}</span>}
     <button ref={buttonRef} type="button" aria-haspopup="dialog" aria-expanded={open} aria-controls={`${id}-panel`}

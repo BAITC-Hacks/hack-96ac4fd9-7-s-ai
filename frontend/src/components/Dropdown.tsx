@@ -14,6 +14,7 @@ interface Props {
   defaultValue?: string;
   /** "segment" sits inside the search pill; "field" looks like a regular input. */
   variant?: 'segment' | 'field';
+  className?: string;
 }
 
 const Chevron = ({ open }: { open: boolean }) => <motion.svg aria-hidden="true" viewBox="0 0 16 16"
@@ -26,7 +27,7 @@ const Check = () => <svg aria-hidden="true" viewBox="0 0 16 16" className="size-
   <path d="m3 8.5 3.2 3L13 4.5" />
 </svg>;
 
-export default function Dropdown({ name, label, options, placeholder = '', defaultValue = '', variant = 'segment' }: Props) {
+export default function Dropdown({ name, label, options, placeholder = '', defaultValue = '', variant = 'segment', className = '' }: Props) {
   const reduce = useReducedMotion();
   const id = useId();
   const [value, setValue] = useState(defaultValue);
@@ -109,7 +110,7 @@ export default function Dropdown({ name, label, options, placeholder = '', defau
   const valueClass = `truncate ${selected && selected.value !== '' ? 'text-ink' : 'text-muted'}`;
   const labelId = `${id}-label`;
 
-  return <div ref={rootRef} className={variant === 'segment' ? 'segment-shell' : 'field relative'}>
+  return <div ref={rootRef} className={`${variant === 'segment' ? 'segment-shell' : 'field relative'} ${className}`.trim()}>
     {variant === 'field' && <span id={labelId}>{label}</span>}
     <button ref={buttonRef} type="button" aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`}
       {...(variant === 'field' ? { 'aria-labelledby': `${labelId} ${id}-value` } : {})}
@@ -117,7 +118,7 @@ export default function Dropdown({ name, label, options, placeholder = '', defau
       onClick={() => (open ? hide(false) : show())} onKeyDown={onButtonKeyDown}>
       {variant === 'segment' && <span className="segment-label">{label}</span>}
       <span className="flex w-full min-w-0 items-center justify-between gap-2">
-        <span id={`${id}-value`} className={valueClass}>{shown}</span>
+        <span id={`${id}-value`} className={valueClass} title={shown}>{shown}</span>
         <Chevron open={open} />
       </span>
     </button>

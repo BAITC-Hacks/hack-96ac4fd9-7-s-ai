@@ -3,6 +3,7 @@ import type { CatalogOptions, CreateMatchInput, MatchResult } from '../../shared
 import { createMatch, getCatalogOptions, localizeMatchResult, USE_MOCKS } from './api/client';
 import RequestForm from './components/RequestForm';
 import RequestSummary from './components/RequestSummary';
+import type { SummaryParam } from './components/RequestSummary';
 import MatchResults from './components/MatchResults';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { useLocale } from './components/LocaleProvider';
@@ -10,6 +11,7 @@ import { localizeError } from './lib/messages';
 import { API_LOCALES } from './lib/locale';
 import HowItWorks from './components/HowItWorks';
 import AnimatedBackground from './components/AnimatedBackground';
+import Hero from './components/Hero';
 
 export default function App() {
   const { locale, t } = useLocale();
@@ -20,6 +22,8 @@ export default function App() {
   const [result, setResult] = useState<MatchResult | null>(null);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState<CreateMatchInput>();
+  // What the search form starts from: the last search, or that search minus a field the user cleared.
+  const [formSeed, setFormSeed] = useState<Partial<CreateMatchInput>>();
   const inFlight = useRef(false);
   const resultsRef = useRef<HTMLElement>(null);
 
@@ -50,6 +54,7 @@ export default function App() {
     inFlight.current = true;
     setPending(true);
     setSubmitted({ ...input });
+    setFormSeed({ ...input });
     setError('');
     if (!keepResult) {
       setResult(null);
@@ -68,6 +73,32 @@ export default function App() {
     }
   }
 
+  // Optional filters are simply dropped and the search re-runs; a required one cannot be empty,
+  // so it is cleared in the form and the user is taken straight to that field to choose again.
+  function removeParam(param: SummaryParam) {
+    if (!submitted) return;
+    if (param === 'durationHours' || param === 'language') {
+      const next: CreateMatchInput = { ...submitted };
+      if (param === 'durationHours') delete next.durationHours;
+      else delete next.language;
+      void search(next);
+      return;
+    }
+    const seed: Partial<CreateMatchInput> = { ...submitted };
+    delete seed[param];
+    setFormSeed(seed);
+    setSubmitted(undefined);
+    setResult(null);
+    setError('');
+    setTimeout(() => {
+      const field = document.querySelector<HTMLInputElement>(`form input[name="${param}"]`);
+      const target = field?.type === 'hidden' ? field.parentElement?.querySelector<HTMLButtonElement>('button') : field;
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target?.focus({ preventScroll: true });
+      if (target instanceof HTMLButtonElement) target.click();
+    }, 50);
+  }
+
   return <>
     <AnimatedBackground />
     <header className="sticky top-0 z-20 border-b border-hairline bg-canvas/80 backdrop-blur-md">
@@ -81,15 +112,14 @@ export default function App() {
     </header>
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6">
       <section className="pt-10 pb-10">
-        <h1 className="text-[28px] font-bold leading-tight">{t('headline')}</h1>
-        <p className="mt-2 max-w-2xl text-base text-muted">{t('intro')}</p>
+        <Hero catalog={catalog} />
         {USE_MOCKS && <p className="chip mt-4 bg-surface-soft">{t('demo')}</p>}
-        <div className="mt-8">{catalog ? <RequestForm key={JSON.stringify(submitted)} initialInput={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />
+        <div className="mt-10">{catalog ? <RequestForm key={JSON.stringify(formSeed)} initialInput={formSeed} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />
           : catalogError ? <div className="panel" role="alert"><p>{localizeError(catalogError, locale)}</p><button className="secondary mt-4" onClick={() => setCatalogAttempt((value) => value + 1)}>{t('catalogRetry')}</button></div>
             : <p role="status" className="panel text-muted">{t('catalogLoading')}</p>}</div>
       </section>
       <section ref={resultsRef} aria-label={t('results')} aria-busy={pending} aria-live="polite" className="scroll-mt-6 space-y-6">
-        {submitted && catalog && <RequestSummary key={JSON.stringify(submitted)} input={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} />}
+        {submitted && catalog && <RequestSummary key={JSON.stringify(submitted)} input={submitted} catalog={catalog} pending={pending} onSearch={(input) => void search(input)} onRemove={removeParam} />}
         {pending && <div>
           <p role="status" className="text-sm text-muted">{t('checking')}</p>
           <div aria-hidden="true" className="mt-4 grid gap-4 lg:grid-cols-3">

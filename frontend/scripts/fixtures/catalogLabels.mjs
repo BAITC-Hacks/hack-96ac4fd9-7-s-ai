@@ -22,7 +22,7 @@ export const CATALOG_LABELS = [
   ['Шоу-программа', 'Шоу-бағдарлама', 'Show programme'],
   ['день рождения', 'Туған күн', 'Birthday'],
   ['конференция', 'Конференция', 'Conference'],
-  ['корпоратив', 'Корпоративтік іс-шара', 'Corporate event'],
+  ['корпоратив', 'Корпоратив', 'Corporate event'],
   ['свадьба', 'Үйлену тойы', 'Wedding'],
   ['той', 'Той', 'Toi (Kazakh celebration)'],
   ['юбилей', 'Мерейтой', 'Anniversary'],

@@ -7,26 +7,39 @@ import DatePicker from './DatePicker';
 import { localizeError } from '../lib/messages';
 import { MAX_EVENT_DATE, MIN_EVENT_DATE, validateInput } from '../lib/validation';
 
+export type SummaryParam = Exclude<keyof CreateMatchInput, 'locale'>;
+
 interface Props {
   input: CreateMatchInput;
   catalog: CatalogOptions;
   pending: boolean;
   onSearch: (input: CreateMatchInput) => void;
+  onRemove?: (param: SummaryParam) => void;
 }
 
-export default function RequestSummary({ input, catalog, pending, onSearch }: Props) {
+export default function RequestSummary({ input, catalog, pending, onSearch, onRemove }: Props) {
   const { locale, t } = useLocale();
   const [error, setError] = useState('');
-  const chips = [
-    catalogLabel(input.city, locale), catalogLabel(input.eventType, locale), catalogLabel(input.category, locale),
-    formatDate(input.eventDate, locale), t('budgetUpTo', { amount: formatMoney(input.budgetKzt, locale) }),
-    ...(input.durationHours !== undefined ? [t('hours', { count: input.durationHours })] : []),
-    ...(input.language ? [languageLabel(input.language, locale)] : []),
+  const chips: { param: SummaryParam; label: string }[] = [
+    { param: 'city', label: catalogLabel(input.city, locale) },
+    { param: 'eventType', label: catalogLabel(input.eventType, locale) },
+    { param: 'category', label: catalogLabel(input.category, locale) },
+    { param: 'eventDate', label: formatDate(input.eventDate, locale) },
+    { param: 'budgetKzt', label: t('budgetUpTo', { amount: formatMoney(input.budgetKzt, locale) }) },
+    ...(input.durationHours !== undefined ? [{ param: 'durationHours' as const, label: t('hours', { count: input.durationHours }) }] : []),
+    ...(input.language ? [{ param: 'language' as const, label: languageLabel(input.language, locale) }] : []),
   ];
   return <div className="flex flex-col gap-5 border-b border-hairline pb-6 lg:flex-row lg:items-end lg:justify-between">
     <div className="min-w-0">
       <h2 className="text-base font-semibold">{t('summary')}</h2>
-      <ul className="mt-3 flex flex-wrap gap-2">{chips.map((chip, index) => <li key={index} className="chip">{chip}</li>)}</ul>
+      <ul className="mt-3 flex flex-wrap gap-2">{chips.map(({ param, label }) => <li key={param}
+        className="group chip relative pr-3 transition-[padding] duration-200 focus-within:pr-8 hover:pr-8 pointer-coarse:pr-8">
+        {label}
+        <button type="button" disabled={pending} aria-label={t('removeParam', { name: label })} onClick={() => onRemove?.(param)}
+          className="absolute right-1 flex size-6 items-center justify-center rounded-full text-muted opacity-0 transition-opacity duration-200 hover:bg-surface-strong hover:text-ink focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3 fill-none stroke-current stroke-2"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+        </button>
+      </li>)}</ul>
     </div>
     <form noValidate className="shrink-0" onSubmit={(event) => {
       event.preventDefault();

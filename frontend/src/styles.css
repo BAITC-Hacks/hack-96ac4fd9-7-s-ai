@@ -38,14 +38,14 @@
 
   /* Search pill: segments separated by hairlines, ending in a round accent button. */
   .search-pill { @apply flex flex-col rounded-card border border-hairline bg-canvas shadow-float lg:flex-row lg:items-center lg:rounded-full lg:py-2 lg:pr-2 lg:pl-2; }
-  .segment { @apply flex min-w-0 flex-1 flex-col gap-0.5 border-b border-hairline px-6 py-3 lg:rounded-full lg:border-b-0 lg:border-r lg:py-2 hover:bg-surface-soft; }
-  .segment-label { @apply text-xs font-bold text-ink; }
+  .segment { @apply flex min-w-0 flex-1 flex-col gap-0.5 border-b border-hairline px-6 py-3 lg:rounded-full lg:border-b-0 lg:border-r lg:px-4 lg:py-2 hover:bg-surface-soft; }
+  .segment-label { @apply max-w-full truncate text-xs font-bold whitespace-nowrap text-ink; }
   .segment input { @apply w-full min-w-0 appearance-none truncate border-0 bg-transparent p-0 text-sm text-muted outline-none; }
   .segment input:focus-visible { @apply text-ink; }
 
   /* Custom dropdown: the whole segment is the trigger; the panel floats above the page. */
   .segment-shell { @apply relative min-w-0 flex-1 border-b border-hairline lg:border-b-0 lg:border-r; }
-  .segment-trigger { @apply flex w-full min-w-0 flex-col items-start gap-0.5 px-6 py-3 text-left outline-none hover:bg-surface-soft focus-visible:bg-surface-soft lg:rounded-full lg:py-2 aria-expanded:bg-surface-strong; }
+  .segment-trigger { @apply flex w-full min-w-0 flex-col items-start gap-0.5 px-6 py-3 text-left lg:px-4 outline-none hover:bg-surface-soft focus-visible:bg-surface-soft lg:rounded-full lg:py-2 aria-expanded:bg-surface-strong; }
   .dropdown-field { @apply flex h-12 w-full items-center rounded-lg border border-hairline bg-canvas px-3 text-left text-base font-normal outline-none aria-expanded:border-2 aria-expanded:border-ink focus-visible:border-2 focus-visible:border-ink; }
   .dropdown-panel { @apply absolute top-full left-0 z-30 mt-2 max-h-80 w-max min-w-full max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-hairline bg-canvas p-2 shadow-float outline-none sm:max-w-[22rem]; }
   /* Visibility follows React state, not the animation, so the list is focusable on the same frame it opens. */
