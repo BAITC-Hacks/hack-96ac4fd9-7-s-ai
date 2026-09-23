@@ -9,9 +9,10 @@ import os
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from matcher import load_catalog, metadata, recommend
+from catalog_service import browse_catalog, contractor_detail, compare_contractors
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 32_768
@@ -91,15 +92,34 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
                 self.wfile.write(body)
 
         def do_GET(self):
-            path = unquote(urlsplit(self.path).path)
+            url = urlsplit(self.path)
+            path = unquote(url.path)
+            params = {key: values[-1] for key, values in parse_qs(url.query, keep_blank_values=True).items()}
             if path in ("/api/health", "/health"):
                 return self.send_json(200, {"status": "ok", "profiles": len(catalog),
                                             "catalog_version": catalog_version})
             if path == "/api/meta":
                 return self.send_json(200, info)
+            try:
+                if path == "/api/catalog":
+                    return self.send_json(200, browse_catalog(catalog, params))
+                if path.startswith("/api/contractors/"):
+                    profile_id = path.removeprefix("/api/contractors/")
+                    return self.send_json(200, contractor_detail(catalog, profile_id, params.get("ui_language", "kk")))
+                if path == "/api/compare":
+                    ids = params.get("ids", "").split(",") if params.get("ids") else []
+                    return self.send_json(200, compare_contractors(catalog, ids, params.get("date") or None,
+                                                                   params.get("ui_language", "kk")))
+            except KeyError:
+                return self.send_json(404, {"error": "Мердігер табылмады / Подрядчик не найден"})
+            except ValueError as error:
+                return self.send_json(400, {"error": str(error)})
             if path.startswith("/api/"):
                 return self.send_json(404, {"error": "Not found"})
-            relative = "index.html" if path in ("", "/") else path.lstrip("/")
+            if path in ("/catalog", "/compare", "/saved", "/history") or path.startswith("/contractor/"):
+                relative = "portal.html"
+            else:
+                relative = "index.html" if path in ("", "/") else path.lstrip("/")
             file = (public / relative).resolve()
             if not file.is_relative_to(public) or not file.is_file():
                 return self.send_json(404, {"error": "Not found"})

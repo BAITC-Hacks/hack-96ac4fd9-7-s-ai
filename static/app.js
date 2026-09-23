@@ -4,6 +4,10 @@
   const $ = (selector) => document.querySelector(selector);
   const text = {
     kk: {
+      navMatching: "Іріктеу", navCatalog: "Каталог", navSaved: "Таңдаулылар", navCompare: "Салыстыру", navHistory: "Іздеу тарихы",
+      viewProfile: "Профильді ашу ↗", saveProfile: "♡ Таңдаулыға", savedProfile: "♥ Сақталды", compareProfile: "+ Салыстыру", comparedProfile: "✓ Салыстыруда",
+      compareFull: "Бір мезетте ең көбі 3 мердігерді салыстыруға болады. Салыстыру бетінде біреуін алып тастаңыз.",
+      comparePrompt: "Айырмашылықты бір кестеден көріңіз: баға, тіл, формат және бос күн.", compareOpen: "Салыстыруды ашу →",
       skip: "Сұранысқа өту", headerCaption: "Каталогтан дәл таңдау", profiles: "профиль",
       eyebrow: "СӘТТІ ІС-ШАРА ОСЫНДАН БАСТАЛАДЫ", title: "Іс-шараңызға дәл келетін адамдар.",
       subtitle: "Шарттарыңызды айтыңыз. Біз ең сәйкес үш нұсқаны ұсынып, әр таңдауды түсіндіреміз.",
@@ -33,6 +37,10 @@
       loadingCatalog: "Каталог жүктеліп жатыр…", resetFilters: "Шарттарды өзгертіп, қайта таңдаңыз.", availableDate: "Каталогта бұл күн бос емес деп белгіленбеген."
     },
     ru: {
+      navMatching: "Подбор", navCatalog: "Каталог", navSaved: "Избранное", navCompare: "Сравнение", navHistory: "История",
+      viewProfile: "Открыть профиль ↗", saveProfile: "♡ В избранное", savedProfile: "♥ Сохранено", compareProfile: "+ Сравнить", comparedProfile: "✓ В сравнении",
+      compareFull: "Можно сравнить не больше 3 подрядчиков. Удалите одного на странице сравнения.",
+      comparePrompt: "Сравните цену, языки, форматы и доступность на дату в одной таблице.", compareOpen: "Открыть сравнение →",
       skip: "Перейти к запросу", headerCaption: "Точный выбор из каталога", profiles: "профилей",
       eyebrow: "ХОРОШЕЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ", title: "Те самые люди для вашего события.",
       subtitle: "Расскажите о событии. Мы предложим три подходящих варианта и объясним каждый выбор.",
@@ -80,7 +88,7 @@
   };
   const form = $("#request-form");
   const fields = ["city", "date", "event_format", "category", "budget_kzt", "language", "duration_hours", "preferences"];
-  let uiLanguage = "kk";
+  let uiLanguage = window.FirebirdStore?.getLanguage() || "kk";
   let metadata = null;
   let lastResult = null;
   let lastQuery = null;
@@ -89,6 +97,39 @@
   let requestVersion = 0;
   let busy = false;
   const welcomeTemplate = $("#welcome-state").cloneNode(true);
+  let toastTimer = null;
+
+  function toast(message) {
+    let node = $("#match-toast");
+    if (!node) {
+      node = element("div", "match-toast");
+      node.id = "match-toast";
+      node.setAttribute("role", "status");
+      document.body.append(node);
+    }
+    node.textContent = message;
+    node.classList.add("visible");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove("visible"), 5000);
+  }
+  function syncStoreControls() {
+    const favorites = window.FirebirdStore?.getFavorites() || [];
+    const comparisons = window.FirebirdStore?.getCompare() || [];
+    document.querySelectorAll('[data-store-count="favorites"]').forEach(node => { node.textContent = favorites.length; });
+    document.querySelectorAll('[data-store-count="compare"]').forEach(node => { node.textContent = comparisons.length; });
+    document.querySelectorAll('[data-favorite-id]').forEach(button => {
+      const active = favorites.includes(button.dataset.favoriteId);
+      button.textContent = t(active ? "savedProfile" : "saveProfile");
+      button.setAttribute("aria-pressed", String(active));
+      button.classList.toggle("selected", active);
+    });
+    document.querySelectorAll('[data-compare-id]').forEach(button => {
+      const active = comparisons.includes(button.dataset.compareId);
+      button.textContent = t(active ? "comparedProfile" : "compareProfile");
+      button.setAttribute("aria-pressed", String(active));
+      button.classList.toggle("selected", active);
+    });
+  }
 
   function t(key) { return text[uiLanguage][key] || key; }
   function translated(value) {
@@ -227,7 +268,12 @@
     const avatar = element("div", "contractor-avatar", initials(card.name));
     avatar.setAttribute("aria-hidden", "true");
     const identity = element("div", "card-identity");
-    identity.append(element("h3", "card-name", card.name));
+    const heading = element("h3", "card-name");
+    const profileUrl = "/contractor/" + encodeURIComponent(card.id) + "?date=" + encodeURIComponent(lastResult?.query?.date || $("#date").value);
+    const profileName = element("a", "", card.name);
+    profileName.href = profileUrl;
+    heading.append(profileName);
+    identity.append(heading);
     const categories = Array.isArray(card.category) ? card.category.map(translated).join(", ") : translated(card.category);
     identity.append(element("p", "card-meta", [categories, translated(card.city)].filter(Boolean).join(" · ")));
     header.append(avatar, identity, element("span", "card-rank", index === 0 ? t("bestMatch") : "0" + (index + 1)));
@@ -245,6 +291,23 @@
     if (card.max_hours !== null && card.max_hours !== undefined && card.max_hours !== "") pills.append(element("span", "card-pill", card.max_hours + " " + t("maxHours")));
     footer.append(price, pills);
     article.append(footer);
+    const actions = element("div", "card-actions");
+    const openProfile = element("a", "card-action card-profile-link", t("viewProfile"));
+    openProfile.href = profileUrl;
+    const save = element("button", "card-action", t("saveProfile"));
+    save.type = "button";
+    save.dataset.favoriteId = card.id;
+    save.addEventListener("click", () => { window.FirebirdStore?.toggleFavorite(card.id); syncStoreControls(); });
+    const compare = element("button", "card-action", t("compareProfile"));
+    compare.type = "button";
+    compare.dataset.compareId = card.id;
+    compare.addEventListener("click", () => {
+      const state = window.FirebirdStore?.toggleCompare(card.id);
+      if (state?.full) toast(t("compareFull"));
+      syncStoreControls();
+    });
+    actions.append(openProfile, save, compare);
+    article.append(actions);
     const details = element("details", "evidence-details");
     details.append(element("summary", "", t("evidence")));
     const evidenceBody = element("div", "evidence-body");
@@ -345,6 +408,11 @@
       const list = element("div", "cards-list");
       cards.forEach((card, index) => list.append(renderCard(card, index)));
       container.append(list);
+      const comparePrompt = element("div", "comparison-prompt");
+      const compareLink = element("a", "", t("compareOpen"));
+      compareLink.href = "/compare?date=" + encodeURIComponent(query.date);
+      comparePrompt.append(element("span", "", t("comparePrompt")), compareLink);
+      container.append(comparePrompt);
       $("#live-status").textContent = t("foundPrefix") + ": " + summary.eligible_count + ". " + t("shownPrefix") + ": " + cards.length + ".";
     } else {
       const noCategory = result.outcome === "no_category_in_city";
@@ -362,6 +430,7 @@
     const suggestions = renderSuggestions(result);
     if (suggestions) container.append(suggestions);
     if (result.outcome !== "no_category_in_city") container.append(renderAudit(result));
+    syncStoreControls();
   }
 
   async function runSearch(options = {}) {
@@ -390,6 +459,8 @@
       if (!Array.isArray(result.cards) || !result.outcome) throw new Error(t("networkError"));
       lastResult = result;
       lastQuery = query;
+      window.FirebirdStore?.addHistory({query: result.query, card_ids: result.cards.map(card => card.id)});
+      try { sessionStorage.setItem("firebird.lastQuery", JSON.stringify(result.query)); } catch {}
       renderResult(result, previousQuery);
       $("#form-notice").hidden = queryComparable(query) === queryComparable(getQuery());
     } catch (error) {
@@ -422,6 +493,18 @@
       translateStatic(welcome);
       $("#results-content").replaceChildren(welcome);
       $("#live-status").textContent = "";
+      syncStoreControls();
+      let restored = null;
+      try {
+        const prefill = sessionStorage.getItem("firebird.prefill");
+        const previous = sessionStorage.getItem("firebird.lastQuery");
+        if (prefill || previous) restored = JSON.parse(prefill || previous);
+        if (prefill) sessionStorage.removeItem("firebird.prefill");
+      } catch {}
+      if (restored && typeof restored === "object") {
+        fillQuery(restored);
+        await runSearch();
+      }
     } catch {
       metadata = null;
       $("#submit-button").disabled = true;
@@ -431,6 +514,7 @@
   async function changeLanguage(language) {
     if (uiLanguage === language) return;
     uiLanguage = language;
+    window.FirebirdStore?.setLanguage(language);
     document.documentElement.lang = language;
     document.title = language === "kk" ? "Firebird — Іс-шараңызға дәл таңдау" : "Firebird — Точный выбор для вашего события";
     document.querySelectorAll("[data-language]").forEach(button => {
@@ -442,6 +526,7 @@
     populateOptions(true);
     updateExtraSummary();
     renderDemos();
+    syncStoreControls();
     if (lastResult || busy) await runSearch();
   }
 
@@ -449,5 +534,14 @@
   form.addEventListener("input", markChanged);
   form.addEventListener("change", markChanged);
   document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => changeLanguage(button.dataset.language)));
+  window.addEventListener("firebird:storechange", syncStoreControls);
+  document.documentElement.lang = uiLanguage;
+  document.title = uiLanguage === "kk" ? "Firebird — Іс-шараңызға дәл таңдау" : "Firebird — Точный выбор для вашего события";
+  document.querySelectorAll("[data-language]").forEach(button => {
+    button.classList.toggle("active", button.dataset.language === uiLanguage);
+    button.setAttribute("aria-pressed", String(button.dataset.language === uiLanguage));
+  });
+  translateStatic();
+  syncStoreControls();
   initialize();
 })();

@@ -232,36 +232,132 @@ def _first_failure(profile, query, ignore=()):
     return next((key for key, failed in checks if failed and key not in ignore), None)
 
 
-def _score(profile, query):
-    text = _normalized_text(profile['description'])
-    # A profile saying a quiet formal evening would NOT suit it is not evidence
-    # of quiet delivery. Keep that caveat visible in the raw source, not in rank.
-    text = ' '.join(part for part in re.split(r'[.!?]', text) if 'не подойдем' not in part and 'не подойдет' not in part)
+def _normalized_positions(value, offset=0):
+    """Map every normalized character back to its exact source position."""
+    characters, positions = [], []
+    for index, character in enumerate(value):
+        normalized = _normalized_text(character)
+        characters.extend(normalized)
+        positions.extend([offset + index] * len(normalized))
+    return ''.join(characters), positions
+
+
+def _ranking_source(description):
+    parts, positions = [], []
+    for part in re.finditer(r'[^.!?]+', description):
+        normalized, mapping = _normalized_positions(part.group(), part.start())
+        # This existing exception preserves the original ranking behavior.
+        if 'не подойдем' in normalized or 'не подойдет' in normalized:
+            continue
+        if parts:
+            parts.append(' ')
+            positions.append(None)
+        parts.append(normalized)
+        positions.extend(mapping)
+    return ''.join(parts), positions
+
+
+def _negated_preference(text, start, end):
+    before = text[max(0, start - 35):start]
+    after = text[end:end + 30]
+    return bool(re.search(r'\b(?:без|не|никак\w*|исключ\w*|не\s+хочу|не\s+надо|не\s+нуж\w*)\s+(?:\w+\s+){0,2}$', before)
+                or re.match(r'\w*(?:сыз|сіз)\b', after)
+                or re.match(r'\w*\s+(?:болмасын|керек емес|қажет емес|не\s+(?:нуж\w*|надо|желател\w*))', after))
+
+
+def _query_fragment(original, normalized, mapping, start, end):
+    # Expand a matching stem to its whole word, retaining user spelling.
+    while start > 0 and normalized[start - 1].isalnum():
+        start -= 1
+    while end < len(normalized) and normalized[end].isalnum():
+        end += 1
+    fragment = original[mapping[start]:mapping[end - 1] + 1]
+    return fragment if len(fragment) <= 70 else None
+
+
+def _source_excerpt(description, text, mapping, start, end):
+    """An exact, short source clause, never a positive claim from a negation."""
+    if _negated_preference(text, start, end):
+        return None
+    before = text[max(0, start - 25):start]
+    if re.search(r'\bне\s+(?:\w+\s+){0,2}$', before):
+        return None
+    if mapping[start] is None or mapping[end - 1] is None:
+        return None
+    original_start, original_end = mapping[start], mapping[end - 1] + 1
+    # Prefer the whole sentence. For a long sentence, use its complete local
+    # comma/semicolon/bullet clause instead of cutting words or inventing text.
+    for separators in ('.!?\r\n•', '.!?\r\n•,;'):
+        left = original_start
+        while left > 0 and description[left - 1] not in separators:
+            left -= 1
+        right = original_end
+        while right < len(description) and description[right] not in separators:
+            right += 1
+        excerpt = description[left:right].strip()
+        if 5 <= len(excerpt) <= 200:
+            return excerpt
+    return None
+
+
+def _ranking_evidence(profile, query):
+    """Calculate the score and proof of its positive preference hits together."""
+    description = profile['description']
+    text, source_positions = _ranking_source(description)
     event_matches = sum(_contains(text, group) for group in EVENT_GROUPS[query['event_format']])
-    preferences = _normalized_text(query['preferences'])
+    preferences, query_positions = _normalized_positions(query['preferences'])
     preference_matches = 0
     handled_words = set()
+    positive_proofs = []
+
+    def remember_proof(query_match, source_matches, weight):
+        if _negated_preference(preferences, query_match.start(), query_match.end()):
+            return
+        fragment = _query_fragment(query['preferences'], preferences, query_positions,
+                                   query_match.start(), query_match.end())
+        if fragment is None:
+            return
+        for source_match in sorted(source_matches, key=lambda match: match.start()):
+            excerpt = _source_excerpt(description, text, source_positions,
+                                      source_match.start(), source_match.end())
+            if excerpt is not None:
+                positive_proofs.append((weight, query_match.start(), source_match.start(),
+                                        {'query_fragment': fragment, 'source_excerpt': excerpt}))
+                break
+
     for aliases, evidence in PREFERENCE_GROUPS:
-        if _contains(preferences, aliases):
-            direction = 1
-            for alias in aliases:
-                for match in re.finditer(re.escape(_normalized_text(alias)), preferences):
-                    before = preferences[max(0, match.start() - 35):match.start()]
-                    after = preferences[match.end():match.end() + 30]
-                    if (re.search(r'(?:без|не\s+хочу|не\s+нуж\w*)\s+(?:\w+\s+){0,2}$', before)
-                            or re.match(r'\w*(?:сыз|сіз)\b', after)
-                            or re.match(r'\w*\s+(?:болмасын|керек емес|қажет емес)', after)):
-                        direction = -1
-            preference_matches += direction * int(_contains(text, evidence))
+        query_matches = [match for alias in aliases
+                         for match in re.finditer(re.escape(_normalized_text(alias)), preferences)]
+        if query_matches:
+            direction = -1 if any(_negated_preference(preferences, match.start(), match.end())
+                                  for match in query_matches) else 1
+            source_matches = [match for pattern in evidence
+                              for match in re.finditer(re.escape(_normalized_text(pattern)), text)]
+            preference_matches += direction * int(bool(source_matches))
+            if direction > 0 and source_matches:
+                remember_proof(min(query_matches, key=lambda match: match.start()), source_matches, 6)
             for token in re.findall(r'[\w]+', preferences, flags=re.UNICODE):
                 if any(_normalized_text(alias) in token or token in _normalized_text(alias) for alias in aliases):
                     handled_words.add(token)
     tokens = set(re.findall(r'[^\W\d_]+', preferences, flags=re.UNICODE)) - STOPWORDS - handled_words
     # Prefix matching handles common Russian/Kazakh inflections without a model.
     stems = {token[:6] for token in tokens if len(token) >= 4}
-    source_words = re.findall(r'[^\W\d_]+', text, flags=re.UNICODE)
-    literal_matches = sum(any(word.startswith(stem) for word in source_words) for stem in stems)
-    return 3 * event_matches + 6 * preference_matches + 2 * literal_matches
+    source_words = list(re.finditer(r'[^\W\d_]+', text, flags=re.UNICODE))
+    query_words = list(re.finditer(r'[^\W\d_]+', preferences, flags=re.UNICODE))
+    literal_matches = 0
+    for stem in sorted(stems):
+        matches = [match for match in source_words if match.group().startswith(stem)]
+        if matches:
+            literal_matches += 1
+            query_match = next(match for match in query_words if match.group() in tokens and match.group().startswith(stem))
+            remember_proof(query_match, matches, 2)
+    positive_proofs.sort(key=lambda item: (-item[0], item[1], item[2]))
+    return {'score': 3 * event_matches + 6 * preference_matches + 2 * literal_matches,
+            'preference_match': positive_proofs[0][3] if positive_proofs else None}
+
+
+def _score(profile, query):
+    return _ranking_evidence(profile, query)['score']
 
 
 def _money(value):
@@ -270,15 +366,27 @@ def _money(value):
     return f'{value:,.2f}'.replace(',', ' ').rstrip('0').rstrip('.')
 
 
-def _card(profile, query):
+def _card(profile, query, ranking=None):
     kk = query['ui_language'] == 'kk'
     fact = fact_for(profile, query['ui_language']).rstrip('.!?')
+    ranking = ranking if ranking is not None else _ranking_evidence(profile, query)
+    preference_match = ranking['preference_match']
+    if preference_match:
+        fragment, excerpt = preference_match['query_fragment'], preference_match['source_excerpt']
+        framed_quote = (f'«{fragment}» қалауыңызға қатысты каталогта: «{excerpt}»' if kk else
+                        f'По пожеланию «{fragment}» в каталоге указано: «{excerpt}»')
+        # Two catalog entries can share a repertoire sentence. Retain their
+        # distinct audited fact in that case so explanations remain useful.
+        fact = fact + '; ' + framed_quote if ranking.get('include_fact') else framed_quote
     price, budget = _money(profile['price_from_kzt']), _money(query['budget_kzt'])
     if kk:
         explanation = f'{fact}. {query["date"]} күні каталог бойынша бос, бастапқы бағасы {price} ₸ және {budget} ₸ бюджетке сыяды.'
     else:
         explanation = f'{fact}. По каталогу свободен на {query["date"]}, цена от {price} ₸ укладывается в бюджет {budget} ₸.'
     evidence = [{'label': 'Дереккөздегі сипаттама' if kk else 'Описание в каталоге', 'text': profile['description']}]
+    if preference_match:
+        evidence.append({'label': 'Қалауға сәйкес дерек' if kk else 'Совпадение с пожеланием',
+                         'text': preference_match['source_excerpt']})
     evidence.append({'label': 'Формат' if kk else 'Формат', 'text': query['event_format']})
     if query['language']:
         evidence.append({'label': 'Тіл' if kk else 'Язык', 'text': query['language']})
@@ -295,12 +403,15 @@ def _card(profile, query):
         evidence.append({'label': 'Қаланың дереккөзі' if kk else 'Источник города', 'text': 'Қала датасетті дайындау кезінде толықтырылған' if kk else 'Город проставлен при подготовке датасета'})
     if profile['synthetic']:
         evidence.append({'label': 'Дерек түрі' if kk else 'Тип данных', 'text': 'Ұйымдастырушы берген синтетикалық профиль' if kk else 'Синтетический профиль из каталога организатора'})
-    return {'id': profile['id'], 'name': profile['anon_name'], 'category': query['category'],
+    result = {'id': profile['id'], 'name': profile['anon_name'], 'category': query['category'],
             'city': profile['city'], 'price_from_kzt': profile['price_from_kzt'],
             'explanation': explanation, 'languages': list(profile['languages']),
             'max_hours': profile['max_hours'], 'synthetic': profile['synthetic'],
             'city_imputed': profile['city_imputed'], 'price_imputed': profile['price_imputed'],
             'evidence': evidence}
+    if preference_match:
+        result['preference_match'] = dict(preference_match)
+    return result
 
 
 def _suggestions(candidates, query):
@@ -373,8 +484,15 @@ def recommend(catalog, query):
             excluded[failure] += 1
         else:
             eligible.append(profile)
-    eligible.sort(key=lambda profile: (-_score(profile, query), profile['price_from_kzt'], profile['id']))
-    cards = [_card(profile, query) for profile in eligible[:3]]
+    rankings = {profile['id']: _ranking_evidence(profile, query) for profile in eligible}
+    eligible.sort(key=lambda profile: (-rankings[profile['id']]['score'], profile['price_from_kzt'], profile['id']))
+    excerpt_counts = Counter(rankings[profile['id']]['preference_match']['source_excerpt']
+                             for profile in eligible[:3] if rankings[profile['id']]['preference_match'])
+    for profile in eligible[:3]:
+        ranking = rankings[profile['id']]
+        if ranking['preference_match']:
+            ranking['include_fact'] = excerpt_counts[ranking['preference_match']['source_excerpt']] > 1
+    cards = [_card(profile, query, rankings[profile['id']]) for profile in eligible[:3]]
     outcome = 'matches' if eligible else ('no_eligible_candidates' if candidates else 'no_category_in_city')
     kk = query['ui_language'] == 'kk'
     return {

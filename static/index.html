@@ -8,6 +8,9 @@
   <title>Firebird — Іс-шараңызға дәл таңдау</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23ee5937'/%3E%3Cpath d='m11 29 6-19 13 7-10 1 6 11-10-6z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/shared.css">
+  <link rel="stylesheet" href="/matching-enhancements.css">
+  <script src="/shared.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -22,6 +25,13 @@
       <div class="language-switch" aria-label="Тіл / Язык"><button type="button" class="active" data-language="kk" aria-pressed="true">ҚАЗ</button><button type="button" data-language="ru" aria-pressed="false">РУС</button></div>
     </div>
   </header>
+  <nav class="firebird-nav" aria-label="Негізгі мәзір / Основное меню">
+    <a class="nav-link" href="/" aria-current="page" data-i18n="navMatching">Іріктеу</a>
+    <a class="nav-link" href="/catalog" data-i18n="navCatalog">Каталог</a>
+    <a class="nav-link" href="/saved"><span data-i18n="navSaved">Таңдаулылар</span><span class="nav-count" data-store-count="favorites">0</span></a>
+    <a class="nav-link" href="/compare"><span data-i18n="navCompare">Салыстыру</span><span class="nav-count" data-store-count="compare">0</span></a>
+    <a class="nav-link" href="/history" data-i18n="navHistory">Іздеу тарихы</a>
+  </nav>
 
   <main class="page-shell">
     <section class="intro" aria-labelledby="page-title">

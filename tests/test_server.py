@@ -4,6 +4,7 @@ import json
 import threading
 import unittest
 from urllib.error import HTTPError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from server import create_server
@@ -88,6 +89,43 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as caught:
             urlopen(self.base_url + "/does-not-exist", timeout=3)
         self.assertEqual(caught.exception.code, 404)
+
+    def test_product_pages_and_catalog_api_are_served(self):
+        for path in ("/catalog", "/contractor/HK-39372", "/saved", "/compare", "/history"):
+            with self.subTest(path=path), urlopen(self.base_url + path, timeout=3) as response:
+                self.assertEqual(response.status, 200)
+                self.assertIn("text/html", response.headers.get("Content-Type", ""))
+                self.assertIn("firebird", response.read().decode("utf-8").lower())
+        params = urlencode({"city": "Алматы", "category": "Ведущий", "page_size": "4"})
+        with urlopen(self.base_url + "/api/catalog?" + params, timeout=3) as response:
+            result = json.load(response)
+        self.assertEqual(result["total"], 10)
+        self.assertEqual(len(result["items"]), 4)
+        self.assertTrue(all(item["city"] == "Алматы" and "Ведущий" in item["categories"]
+                            for item in result["items"]))
+
+    def test_profile_api_preserves_data_and_unknown_id_returns_404(self):
+        with urlopen(self.base_url + "/api/contractors/HK-39372", timeout=3) as response:
+            profile = json.load(response)
+        self.assertEqual(profile["id"], "HK-39372")
+        self.assertEqual(profile["price_from_kzt"], 200_000)
+        self.assertIs(profile["price_imputed"], True)
+        self.assertTrue(profile["description"])
+        self.assertIn("2026-10-01", profile["busy_dates"])
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(self.base_url + "/api/contractors/NOT-A-CATALOG-ID", timeout=3)
+        self.assertEqual(caught.exception.code, 404)
+
+    def test_comparison_api_preserves_order_and_rejects_duplicates(self):
+        params = urlencode({"ids": "HK-27222,HK-44733", "date": "2026-10-09"})
+        with urlopen(self.base_url + "/api/compare?" + params, timeout=3) as response:
+            result = json.load(response)
+        self.assertEqual([item["id"] for item in result["items"]], ["HK-27222", "HK-44733"])
+        self.assertEqual([item["available_on_date"] for item in result["items"]], [False, True])
+        duplicates = urlencode({"ids": "HK-88430,HK-88430"})
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(self.base_url + "/api/compare?" + duplicates, timeout=3)
+        self.assertEqual(caught.exception.code, 400)
 
 
 if __name__ == "__main__":

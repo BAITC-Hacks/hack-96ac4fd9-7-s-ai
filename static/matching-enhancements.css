@@ -1,0 +1,11 @@
+.card-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:13px;border-top:1px solid #efeee8}
+.card-action{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #dedfd4;border-radius:7px;padding:8px 10px;font-size:10px;line-height:1.4;background:#fff;color:#687060;text-decoration:none;cursor:pointer}
+.card-action:hover{border-color:#c1937b;color:#a45537;background:#fff7f1}
+.card-action.selected{color:#a75539;background:#fff0e7;border-color:#e9bea5}
+.card-profile-link{margin-right:auto;color:#a9593d;font-weight:600}
+.card-name a{color:inherit;text-decoration:none}.card-name a:hover{color:#c65a3b}
+.match-toast{position:fixed;z-index:50;right:24px;bottom:24px;max-width:min(420px,calc(100vw - 32px));border-radius:12px;background:#283326;color:#fff;padding:15px 19px;font-size:13px;line-height:1.6;box-shadow:0 12px 40px #13200a33;transform:translateY(20px);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+.match-toast.visible{transform:translateY(0);opacity:1}
+.comparison-prompt{display:flex;justify-content:space-between;align-items:center;gap:14px;background:#f7eee5;border:1px solid #e6d3c0;border-radius:11px;margin-top:18px;padding:13px 16px;font-size:11px;line-height:1.6;color:#876349}
+.comparison-prompt a{color:#a5593b;font-weight:600;white-space:nowrap}
+@media(max-width:760px){.card-action{font-size:11px;padding:9px 10px}.match-toast{bottom:16px;right:16px}.comparison-prompt{flex-wrap:wrap}.page-shell{padding-top:24px}}

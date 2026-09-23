@@ -143,6 +143,41 @@ class MatcherTests(unittest.TestCase):
                     self.assertIn(source["description"], [item["text"] for item in card["evidence"]])
                     self.assertTrue(card["explanation"].strip())
 
+    def test_positive_preference_explanation_quotes_exact_matching_source(self):
+        result = recommend(self.catalog, query(preferences="импровизация", ui_language="ru"))
+        cards = {card["id"]: card for card in result["cards"]}
+        self.assertIn("HK-77838", cards)
+        card = cards["HK-77838"]
+        excerpt = card["preference_match"]["source_excerpt"]
+        self.assertTrue(excerpt)
+        self.assertLessEqual(len(excerpt), 200)
+        self.assertIn("импровиза", excerpt.casefold())
+        self.assertIn(excerpt, self.by_id["HK-77838"]["description"])
+        self.assertIn(excerpt, card["explanation"])
+        self.assertEqual(card["evidence"][1]["text"], excerpt)
+        self.assertEqual(card["evidence"][0]["text"], self.by_id["HK-77838"]["description"])
+
+    def test_affirmative_mne_is_not_negation_but_ne_nuzhna_is(self):
+        improviser = self.make_profile(id="TEST-IMPROV", anon_name="Импровизатор",
+                                      description="Ведущий корпоративных мероприятий с импровизацией.")
+        scripted = self.make_profile(id="TEST-SCRIPT", anon_name="Ведущий по программе",
+                                    description="Ведущий корпоративных мероприятий с точной программой.")
+        catalog = [improviser, scripted]
+        positive = recommend(catalog, query(preferences="мне нравится импровизация"))
+        self.assertEqual(positive["cards"][0]["id"], improviser["id"])
+        card = positive["cards"][0]
+        proof = card["preference_match"]
+        self.assertEqual(proof["query_fragment"], "импровизация")
+        self.assertIn(proof["source_excerpt"], improviser["description"])
+        self.assertIn(proof["source_excerpt"], card["explanation"])
+        self.assertEqual(card["evidence"][1]["text"], proof["source_excerpt"])
+
+        negative = recommend(catalog, query(preferences="не нужна импровизация"))
+        self.assertEqual(negative["cards"][0]["id"], scripted["id"])
+        for card in negative["cards"]:
+            self.assertNotIn("preference_match", card)
+            self.assertNotIn("Қалауға сәйкес дерек", [item["label"] for item in card["evidence"]])
+
 
 if __name__ == "__main__":
     unittest.main()

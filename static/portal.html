@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ee">
+  <meta name="description" content="Firebird — іс-шара мердігерлерінің каталогы, ашық деректер мен негізделген таңдау.">
+  <title>Firebird — Каталог</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23ee5937'/%3E%3Cpath d='m11 29 6-19 13 7-10 1 6 11-10-6z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/shared.css"><link rel="stylesheet" href="/portal.css">
+  <script src="/shared.js" defer></script><script src="/portal.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#portal-main" data-i18n="skip">Мазмұнға өту</a>
+  <header class="site-header portal-header">
+    <a class="brand" href="/" aria-label="Firebird"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="m10 29 7-20 14 8-12 1 8 13-12-7-5 5Z" fill="currentColor"/><path d="m21 9 9-3-3 9-6-6Z" fill="currentColor" opacity=".55"/></svg></span><span>firebird<span class="brand-dot">.</span></span></a>
+    <nav class="firebird-nav" aria-label="Басты навигация">
+      <a class="nav-link" href="/" data-i18n="match">Іріктеу</a>
+      <a class="nav-link" href="/catalog" data-route="catalog" data-i18n="catalog">Каталог</a>
+      <a class="nav-link" href="/saved" data-route="saved"><span data-i18n="saved">Таңдаулылар</span><span class="nav-count" data-count="favorites">0</span></a>
+      <a class="nav-link" href="/compare" data-route="compare"><span data-i18n="compare">Салыстыру</span><span class="nav-count" data-count="compare">0</span></a>
+      <a class="nav-link" href="/history" data-route="history" data-i18n="history">Тарих</a>
+    </nav>
+    <div class="header-actions"><span class="catalog-badge"><span class="status-dot"></span><span id="portal-profile-count">66</span> <span data-i18n="profiles">профиль</span></span><div class="language-switch" aria-label="Тіл / Язык"><button type="button" data-language="kk">ҚАЗ</button><button type="button" data-language="ru">РУС</button></div></div>
+  </header>
+  <main class="portal-shell" id="portal-main" tabindex="-1"><div class="portal-loading" role="status"><span class="portal-spinner"></span><span>Firebird…</span></div></main>
+  <footer class="portal-footer"><span><a href="/" class="footer-brand">firebird.</a><span data-i18n="footer">Каталог деректеріне сүйенген таңдау</span></span><span data-i18n="footerPrice">«Бастап» бағасы. Соңғы құнды мердігермен нақтылаңыз.</span></footer>
+  <div id="portal-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
