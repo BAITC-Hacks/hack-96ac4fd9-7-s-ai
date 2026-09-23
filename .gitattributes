@@ -6,3 +6,4 @@
 *.md text eol=lf
 *.bat text eol=crlf
 data/catalog.csv -text whitespace=trailing-space,space-before-tab,cr-at-eol
+scripts/hooks/* text eol=lf
