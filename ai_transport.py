@@ -29,7 +29,8 @@ def _local_settings(root):
             continue
         for line in lines:
             key, separator, value = line.strip().removeprefix("export ").partition("=")
-            if separator and key.strip() in ("OPENAI_API_KEY", "OPENAI_MODEL"):
+            if separator and key.strip() in ("OPENAI_API_KEY", "OPENAI_MODEL", "NVIDIA_API_KEY",
+                                             "NVIDIA_BASE_URL", "NVIDIA_MODEL"):
                 value = value.strip()
                 if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
                     value = value[1:-1]
@@ -38,6 +39,8 @@ def _local_settings(root):
 
 
 class OpenAITransport:
+    provider = "openai"
+
     def __init__(self, api_key="", model=DEFAULT_MODEL):
         self._api_key = api_key.strip()
         self.model = model or DEFAULT_MODEL
@@ -93,3 +96,18 @@ class OpenAITransport:
             raise AIProviderError(code) from None
         except (ValueError, UnicodeError):
             raise AIProviderError("invalid_response") from None
+
+
+def create_transport(root):
+    """Choose NVIDIA first; retain OpenAI and deterministic fallback support."""
+    from nvidia_transport import NVIDIATransport, NVIDIA_MODEL, NVIDIA_BASE_URL
+
+    local = _local_settings(root)
+    nvidia_key = os.environ.get("NVIDIA_API_KEY") or local.get("NVIDIA_API_KEY", "")
+    if nvidia_key.strip():
+        return NVIDIATransport(
+            api_key=nvidia_key,
+            model=os.environ.get("NVIDIA_MODEL") or local.get("NVIDIA_MODEL", NVIDIA_MODEL),
+            base_url=os.environ.get("NVIDIA_BASE_URL") or local.get("NVIDIA_BASE_URL", NVIDIA_BASE_URL),
+        )
+    return OpenAITransport.from_environment(root)

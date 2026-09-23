@@ -15,7 +15,7 @@ from matcher import load_catalog, metadata, recommend
 from catalog_service import browse_catalog, contractor_detail, compare_contractors
 from planner import plan_event
 from ai_agent import run_agent
-from ai_transport import OpenAITransport
+from ai_transport import create_transport
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 32_768
@@ -77,7 +77,7 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
     source = Path(catalog_path) if catalog_path else ROOT / "data" / "catalog.csv"
     public = (Path(static_dir) if static_dir else ROOT / "static").resolve()
     catalog = load_catalog(source)
-    agent_client = agent_transport if agent_transport is not None else OpenAITransport.from_environment(ROOT)
+    agent_client = agent_transport if agent_transport is not None else create_transport(ROOT)
     catalog_version = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
     info = dict(metadata(catalog), demos=demo_queries(), catalog_version=catalog_version,
                 category_counts={category: sum(category in row['categories'] for row in catalog)
@@ -108,6 +108,7 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
                 return self.send_json(200, info)
             if path == "/api/agent/status":
                 return self.send_json(200, {"configured": bool(agent_client.configured),
+                                            "provider": getattr(agent_client, "provider", "openai"),
                                             "model": agent_client.model})
             try:
                 if path == "/api/catalog":

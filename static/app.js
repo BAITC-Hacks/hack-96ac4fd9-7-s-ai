@@ -94,7 +94,7 @@
     agentFallback: "AI тапсырманы толық аяқтай алмады. Каталог ережелерімен іріктеу көрсетілді.",
     agentUsedForm: "Формадағы бастапқы шарттар қолданылды; еркін мәтін талданды деп есептелмейді.",
     agentUsedParsed: "AI анықтаған және іздеу құралы тексерген шарттар сақталды. Олар төмендегі формада көрсетілген.",
-    agentTools: "Құрал шақырулары", agentModel: "Модель", agentInterpret: "Сұранысты түсіну", agentSearch: "Каталогтан іздеу", agentExplain: "Дәлелді түсіндіру",
+    agentTools: "Құрал шақырулары", agentProvider: "Провайдер", agentModel: "Модель", agentInterpret: "Сұранысты түсіну", agentSearch: "Каталогтан іздеу", agentExplain: "Дәлелді түсіндіру",
     agentOk: "Орындалды", agentFailed: "Орындалмады", agentSkipped: "Өткізілді", agentNoTrace: "Сервер орындау қадамдарын қайтармады.",
     agentRequestFailed: "AI сұранысының жауабы алынбады. Қолмен іріктеуді пайдаланыңыз немесе қайталап көріңіз.", agentCriteria: "Қолданылған шарттар", agentReason: "Себеп коды"
   });
@@ -106,7 +106,7 @@
     agentFallback: "AI не смог полностью завершить задачу. Показан подбор по правилам каталога.",
     agentUsedForm: "Использованы исходные условия формы; свободный текст не считается разобранным.",
     agentUsedParsed: "Сохранены условия, определённые AI и проверенные инструментом поиска. Они показаны в форме ниже.",
-    agentTools: "Вызовов инструментов", agentModel: "Модель", agentInterpret: "Понимание запроса", agentSearch: "Поиск в каталоге", agentExplain: "Объяснение по фактам",
+    agentTools: "Вызовов инструментов", agentProvider: "Провайдер", agentModel: "Модель", agentInterpret: "Понимание запроса", agentSearch: "Поиск в каталоге", agentExplain: "Объяснение по фактам",
     agentOk: "Выполнено", agentFailed: "Не выполнено", agentSkipped: "Пропущено", agentNoTrace: "Сервер не вернул сведения об этапах выполнения.",
     agentRequestFailed: "Не удалось получить ответ AI. Используйте обычный подбор или попробуйте ещё раз.", agentCriteria: "Использованные условия", agentReason: "Код причины"
   });
@@ -286,6 +286,7 @@
     const facts = element("div", "agent-run-facts");
     if (Number.isInteger(agent.tool_calls) && agent.tool_calls >= 0) facts.append(element("span", "", t("agentTools") + ": " + agent.tool_calls));
     if (typeof agent.model === "string" && agent.model) facts.append(element("span", "", t("agentModel") + ": " + agent.model));
+    if (["nvidia", "openai"].includes(agent.provider)) facts.append(element("span", "", t("agentProvider") + ": " + (agent.provider === "nvidia" ? "NVIDIA" : "OpenAI")));
     if (typeof agent.fallback_reason === "string" && /^[a-z0-9_:-]{1,80}$/i.test(agent.fallback_reason)) facts.append(element("span", "", t("agentReason") + ": " + agent.fallback_reason));
     if (facts.childElementCount) box.append(facts);
     const query = result.query;

@@ -1,4 +1,4 @@
-"""Two-call Responses agent with deterministic search and validated evidence.
+"""Two-call agent with deterministic search and validated evidence.
 
 The model interprets text and selects an existing evidence option. It cannot
 invent contractors, reorder search results, or publish free-form factual claims.
@@ -67,7 +67,7 @@ def _call(transport, request, deadline, request_ids):
     if not isinstance(response, dict) or response.get('status') in ('failed', 'incomplete', 'cancelled'):
         raise _AgentFailure('invalid_response')
     identifier = response.get('id')
-    if isinstance(identifier, str) and re.fullmatch(r'resp_[A-Za-z0-9_-]{1,120}', identifier):
+    if isinstance(identifier, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_./:-]{0,199}', identifier):
         request_ids.append(identifier)
     return response
 
@@ -216,6 +216,7 @@ def run_agent(catalog, payload, transport):
     result = recommend(catalog, dict(payload['query'], ui_language=requested_language))
     language = result['query']['ui_language']
     agent = {'mode': 'fallback', 'model': _safe_model(transport), 'input_source': 'form',
+             'provider': getattr(transport, 'provider', 'openai'),
              'tool_calls': 0, 'request_ids': [],
              'trace': [{'step': 'interpret', 'status': 'skipped'},
                        {'step': 'search_contractors', 'status': 'skipped'},
