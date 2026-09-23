@@ -86,6 +86,30 @@
     "корпоратив": "Корпоратив", "свадьба": "Үйлену тойы", "конференция": "Конференция", "юбилей": "Мерейтой", "день рождения": "Туған күн", "той": "Той",
     "русский": "Орыс тілі", "казахский": "Қазақ тілі", "английский": "Ағылшын тілі"
   };
+  Object.assign(text.kk, {
+    agentTitle: "Іс-шараңызды өз сөзіңізбен сипаттаңыз", agentDemo: "Дайын мысал ↗", agentSubmit: "AI арқылы таңдау",
+    agentPlaceholder: "Алматыда 2026 жылғы 9 қазанда корпоративке 1 млн теңгеге дейін орысша сөйлейтін жүргізуші керек, 4 сағат. Жайлы атмосфера маңызды.",
+    agentHint: "AI шарттарды анықтап, каталогты іздеу құралын шақырады. Қолданылған шарттар төмендегі формада көрсетіледі.",
+    agentWorking: "AI сұранысты өңдеп жатыр…", agentSuccess: "AI каталог құралын қолданып, іріктеуді аяқтады.",
+    agentFallback: "AI тапсырманы толық аяқтай алмады. Каталог ережелерімен іріктеу көрсетілді.",
+    agentUsedForm: "Формадағы бастапқы шарттар қолданылды; еркін мәтін талданды деп есептелмейді.",
+    agentUsedParsed: "AI анықтаған және іздеу құралы тексерген шарттар сақталды. Олар төмендегі формада көрсетілген.",
+    agentTools: "Құрал шақырулары", agentModel: "Модель", agentInterpret: "Сұранысты түсіну", agentSearch: "Каталогтан іздеу", agentExplain: "Дәлелді түсіндіру",
+    agentOk: "Орындалды", agentFailed: "Орындалмады", agentSkipped: "Өткізілді", agentNoTrace: "Сервер орындау қадамдарын қайтармады.",
+    agentRequestFailed: "AI сұранысының жауабы алынбады. Қолмен іріктеуді пайдаланыңыз немесе қайталап көріңіз.", agentCriteria: "Қолданылған шарттар", agentReason: "Себеп коды"
+  });
+  Object.assign(text.ru, {
+    agentTitle: "Опишите событие своими словами", agentDemo: "Готовый пример ↗", agentSubmit: "Подобрать с AI",
+    agentPlaceholder: "Нужен русскоязычный ведущий на корпоратив в Алматы 9 октября 2026 года, до 1 млн тенге, на 4 часа. Важна уютная атмосфера.",
+    agentHint: "AI определяет условия и вызывает инструмент поиска по каталогу. Использованные условия появятся в форме ниже.",
+    agentWorking: "AI обрабатывает запрос…", agentSuccess: "AI выполнил подбор с помощью инструмента каталога.",
+    agentFallback: "AI не смог полностью завершить задачу. Показан подбор по правилам каталога.",
+    agentUsedForm: "Использованы исходные условия формы; свободный текст не считается разобранным.",
+    agentUsedParsed: "Сохранены условия, определённые AI и проверенные инструментом поиска. Они показаны в форме ниже.",
+    agentTools: "Вызовов инструментов", agentModel: "Модель", agentInterpret: "Понимание запроса", agentSearch: "Поиск в каталоге", agentExplain: "Объяснение по фактам",
+    agentOk: "Выполнено", agentFailed: "Не выполнено", agentSkipped: "Пропущено", agentNoTrace: "Сервер не вернул сведения об этапах выполнения.",
+    agentRequestFailed: "Не удалось получить ответ AI. Используйте обычный подбор или попробуйте ещё раз.", agentCriteria: "Использованные условия", agentReason: "Код причины"
+  });
   const form = $("#request-form");
   const fields = ["city", "date", "event_format", "category", "budget_kzt", "language", "duration_hours", "preferences"];
   let uiLanguage = window.FirebirdStore?.getLanguage() || "kk";
@@ -96,6 +120,7 @@
   let requestController = null;
   let requestVersion = 0;
   let busy = false;
+  let agentBusy = false;
   const welcomeTemplate = $("#welcome-state").cloneNode(true);
   let toastTimer = null;
 
@@ -232,6 +257,39 @@
     button.querySelector(".button-text").textContent = t(value ? "loading" : "find");
     $(".results-section").setAttribute("aria-busy", String(value));
     document.querySelectorAll(".suggestion-button").forEach(node => { node.disabled = value; });
+    $("#agent-submit").disabled = value || !metadata;
+    $("#agent-submit span").textContent = t(value && agentBusy ? "agentWorking" : "agentSubmit");
+    $("#agent-form").setAttribute("aria-busy", String(value && agentBusy));
+  }
+  function showAgentPending() {
+    const box = $("#agent-trace"); box.hidden = false; box.className = "agent-trace is-pending";
+    box.replaceChildren(element("p", "agent-trace-title", t("agentWorking")));
+  }
+  function showAgentResult(result) {
+    const agent = result.agent || {};
+    const ai = agent.mode === "ai";
+    const trace = Array.isArray(agent.trace) ? agent.trace : [];
+    const usedParsed = agent.input_source === "interpreted" || (agent.input_source !== "form" && trace.some(step => step.step === "search_contractors" && step.status === "ok"));
+    const box = $("#agent-trace"); box.hidden = false; box.className = "agent-trace " + (ai ? "is-ai" : "is-fallback");
+    box.replaceChildren(element("p", "agent-trace-title", t(ai ? "agentSuccess" : "agentFallback")));
+    if (!ai) box.append(element("p", "agent-fallback-note", t(usedParsed ? "agentUsedParsed" : "agentUsedForm")));
+    const steps = element("div", "agent-steps");
+    const stepLabels = { interpret: "agentInterpret", search_contractors: "agentSearch", explain: "agentExplain" };
+    const statusLabels = { ok: "agentOk", failed: "agentFailed", skipped: "agentSkipped" };
+    trace.forEach(step => {
+      if (!stepLabels[step.step] || !statusLabels[step.status]) return;
+      const node = element("div", "agent-step is-" + step.status);
+      node.append(element("span", "agent-step-icon", step.status === "ok" ? "✓" : step.status === "failed" ? "!" : "–"), element("span", "", t(stepLabels[step.step]) + (step.step === "search_contractors" ? " · search_contractors" : "")), element("small", "", t(statusLabels[step.status])));
+      steps.append(node);
+    });
+    if (steps.childElementCount) box.append(steps); else box.append(element("p", "agent-fallback-note", t("agentNoTrace")));
+    const facts = element("div", "agent-run-facts");
+    if (Number.isInteger(agent.tool_calls) && agent.tool_calls >= 0) facts.append(element("span", "", t("agentTools") + ": " + agent.tool_calls));
+    if (typeof agent.model === "string" && agent.model) facts.append(element("span", "", t("agentModel") + ": " + agent.model));
+    if (typeof agent.fallback_reason === "string" && /^[a-z0-9_:-]{1,80}$/i.test(agent.fallback_reason)) facts.append(element("span", "", t("agentReason") + ": " + agent.fallback_reason));
+    if (facts.childElementCount) box.append(facts);
+    const query = result.query;
+    if (query) box.append(element("p", "agent-applied-query", t("agentCriteria") + ": " + [translated(query.city), dateLabel(query.date), translated(query.category), money(query.budget_kzt), translated(query.event_format), query.language ? translated(query.language) : "", query.duration_hours ? query.duration_hours + (uiLanguage === "kk" ? " сағ" : " ч") : ""].filter(Boolean).join(" · ")));
   }
   function renderLoading() {
     const container = element("div", "loading-state");
@@ -248,12 +306,12 @@
     $("#results-content").replaceChildren(container);
     $("#live-status").textContent = t("loadingDetail");
   }
-  function renderFailure(message) {
+  function renderFailure(message, retryAction) {
     const state = element("div", "feedback-state");
     state.append(element("h3", "", t("errorTitle")), element("p", "", message));
     const retry = element("button", "", t("retry"));
     retry.type = "button";
-    retry.addEventListener("click", () => metadata ? runSearch() : initialize());
+    retry.addEventListener("click", retryAction || (() => metadata ? runSearch() : initialize()));
     state.append(retry);
     $("#results-content").replaceChildren(state);
     $("#results-count").hidden = true;
@@ -435,40 +493,54 @@
 
   async function runSearch(options = {}) {
     if (!metadata || !form.reportValidity()) return;
+    const useAgent = typeof options.agentMessage === "string" && options.agentMessage.trim().length > 0;
     const query = getQuery();
     const previousQuery = lastResult?.query || null;
     const version = ++requestVersion;
     if (requestController) requestController.abort();
     requestController = new AbortController();
-    const timeout = setTimeout(() => requestController?.abort(), 25000);
+    const ownController = requestController;
+    const timeout = setTimeout(() => ownController.abort(), 25000);
     $("#error-banner").hidden = true;
     $("#form-notice").hidden = true;
+    agentBusy = useAgent;
     setLoading(true);
     renderLoading();
+    if (useAgent) showAgentPending(); else $("#agent-trace").hidden = true;
     if (options.scroll && window.matchMedia("(max-width: 760px)").matches) $(".results-section").scrollIntoView({ behavior: "smooth", block: "start" });
     try {
-      const body = { ...query };
-      if (previousQuery) body.previous_query = previousQuery;
-      const response = await fetch("/api/recommend", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: requestController.signal
+      const body = useAgent ? { message: options.agentMessage.trim(), query, ui_language: uiLanguage } : { ...query };
+      if (!useAgent && previousQuery) body.previous_query = previousQuery;
+      const response = await fetch(useAgent ? "/api/agent" : "/api/recommend", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ownController.signal
       });
       let result;
       try { result = await response.json(); } catch { throw new Error(t("networkError")); }
       if (!response.ok) throw new Error(result.error || t("networkError"));
       if (version !== requestVersion) return;
-      if (!Array.isArray(result.cards) || !result.outcome) throw new Error(t("networkError"));
+      if (!Array.isArray(result.cards) || !result.outcome || (useAgent && !result.query)) throw new Error(t("networkError"));
+      if (useAgent) {
+        fillQuery(result.query);
+        activeDemo = null;
+        updateDemoActive();
+        showAgentResult(result);
+      }
       lastResult = result;
-      lastQuery = query;
+      lastQuery = useAgent ? result.query : query;
       window.FirebirdStore?.addHistory({query: result.query, card_ids: result.cards.map(card => card.id)});
       try { sessionStorage.setItem("firebird.lastQuery", JSON.stringify(result.query)); } catch {}
       renderResult(result, previousQuery);
-      $("#form-notice").hidden = queryComparable(query) === queryComparable(getQuery());
+      $("#form-notice").hidden = queryComparable(lastQuery) === queryComparable(getQuery());
     } catch (error) {
       if (version !== requestVersion) return;
       const message = error.name === "AbortError" || error instanceof TypeError ? t("networkError") : error.message;
       $("#error-banner").textContent = message;
       $("#error-banner").hidden = false;
-      renderFailure(message);
+      if (useAgent) {
+        const trace = $("#agent-trace"); trace.hidden = false; trace.className = "agent-trace is-fallback";
+        trace.replaceChildren(element("p", "agent-trace-title", t("agentRequestFailed")));
+      }
+      renderFailure(message, useAgent ? () => runSearch({ agentMessage: options.agentMessage, scroll: true }) : null);
     } finally {
       clearTimeout(timeout);
       if (version === requestVersion) setLoading(false);
@@ -487,6 +559,7 @@
       if (metadata.calendar?.max) $("#date").max = metadata.calendar.max;
       $("#catalog-count").textContent = metadata.stats?.profiles ?? 66;
       $("#submit-button").disabled = false;
+      $("#agent-submit").disabled = false;
       renderDemos();
       updateBudget();
       const welcome = welcomeTemplate.cloneNode(true);
@@ -515,6 +588,7 @@
     } catch {
       metadata = null;
       $("#submit-button").disabled = true;
+      $("#agent-submit").disabled = true;
       renderFailure(t("metadataError"));
     }
   }
@@ -538,6 +612,8 @@
   }
 
   form.addEventListener("submit", event => { event.preventDefault(); runSearch({ scroll: true }); });
+  $("#agent-form").addEventListener("submit", event => { event.preventDefault(); if ($("#agent-form").reportValidity()) runSearch({ agentMessage: $("#agent-message").value, scroll: true }); });
+  $("#agent-demo").addEventListener("click", () => { $("#agent-message").value = t("agentPlaceholder"); $("#agent-message").focus(); });
   form.addEventListener("input", markChanged);
   form.addEventListener("change", markChanged);
   document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => changeLanguage(button.dataset.language)));

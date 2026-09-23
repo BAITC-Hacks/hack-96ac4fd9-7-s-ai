@@ -44,6 +44,13 @@
       <span class="intro-note"><span class="note-number">66<span>→</span>3</span><span data-i18n="introNote">ұзын тізімнен нақты таңдауға</span></span>
     </section>
 
+    <section class="agent-panel" aria-labelledby="agent-title">
+      <div class="agent-heading"><div><span class="agent-kicker">FIREBIRD AI</span><h2 id="agent-title" data-i18n="agentTitle">Іс-шараңызды өз сөзіңізбен сипаттаңыз</h2></div><button type="button" id="agent-demo" class="agent-demo" data-i18n="agentDemo">Дайын мысал ↗</button></div>
+      <form id="agent-form" class="agent-form"><label class="sr-only" for="agent-message" data-i18n="agentTitle">Іс-шараңызды өз сөзіңізбен сипаттаңыз</label><textarea id="agent-message" rows="2" maxlength="1500" required data-placeholder="agentPlaceholder" placeholder="Алматыда 2026 жылғы 9 қазанда корпоративке 1 млн теңгеге дейін орысша сөйлейтін жүргізуші керек, 4 сағат. Жайлы атмосфера маңызды."></textarea><button type="submit" id="agent-submit" disabled><span data-i18n="agentSubmit">AI арқылы таңдау</span><span aria-hidden="true">↗</span></button></form>
+      <p class="agent-hint" data-i18n="agentHint">AI шарттарды анықтап, каталогты іздеу құралын шақырады. Қолданылған шарттар төмендегі формада көрсетіледі.</p>
+      <div id="agent-trace" class="agent-trace" aria-live="polite" hidden></div>
+    </section>
+
     <div class="workspace">
       <aside class="request-panel" aria-labelledby="request-title">
         <div class="panel-heading"><div><span class="section-index">01 /</span><h2 id="request-title" data-i18n="requestTitle">Сіздің іс-шараңыз</h2></div><span class="step-icon" aria-hidden="true">↗</span></div>

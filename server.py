@@ -14,6 +14,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from matcher import load_catalog, metadata, recommend
 from catalog_service import browse_catalog, contractor_detail, compare_contractors
 from planner import plan_event
+from ai_agent import run_agent
+from ai_transport import OpenAITransport
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 32_768
@@ -71,10 +73,11 @@ def date_comparison(catalog, current, previous_query):
                 unavailable=unavailable, newly_available=newly_available)
 
 
-def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=None):
+def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=None, agent_transport=None):
     source = Path(catalog_path) if catalog_path else ROOT / "data" / "catalog.csv"
     public = (Path(static_dir) if static_dir else ROOT / "static").resolve()
     catalog = load_catalog(source)
+    agent_client = agent_transport if agent_transport is not None else OpenAITransport.from_environment(ROOT)
     catalog_version = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
     info = dict(metadata(catalog), demos=demo_queries(), catalog_version=catalog_version,
                 category_counts={category: sum(category in row['categories'] for row in catalog)
@@ -103,6 +106,9 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
                                             "catalog_version": catalog_version})
             if path == "/api/meta":
                 return self.send_json(200, info)
+            if path == "/api/agent/status":
+                return self.send_json(200, {"configured": bool(agent_client.configured),
+                                            "model": agent_client.model})
             try:
                 if path == "/api/catalog":
                     return self.send_json(200, browse_catalog(catalog, params))
@@ -149,7 +155,7 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
 
         def do_POST(self):
             api_path = urlsplit(self.path).path
-            if api_path not in ("/api/recommend", "/api/plan"):
+            if api_path not in ("/api/recommend", "/api/plan", "/api/agent"):
                 return self.send_json(404, {"error": "Not found"})
             started = time.perf_counter()
             try:
@@ -165,6 +171,9 @@ def create_server(host="127.0.0.1", port=8000, catalog_path=None, static_dir=Non
                 previous_query = request.pop("previous_query", None)
                 if api_path == "/api/plan":
                     result = plan_event(catalog, request)
+                elif api_path == "/api/agent":
+                    result = run_agent(catalog, request, agent_client)
+                    result["date_change"] = date_comparison(catalog, result, previous_query)
                 else:
                     result = recommend(catalog, request)
                     result["date_change"] = date_comparison(catalog, result, previous_query)
